@@ -7,23 +7,34 @@
 
 import SwiftUI
 
-struct CarElement: Hashable {
-    var imageName = ""
+struct CarGenerator {
+    @State private var carsLastGenerated: Bool = false
     
-    init(name: String) {
-        imageName = name
+    func generateNextRow() {
+        carsLastGenerated = !carsLastGenerated
     }
 }
 
+enum CarElementType {
+    case None, Car
+}
 
+struct CarElement: Hashable {
+    var imageName = ""
+    var carType: CarElementType = CarElementType.None
+    
+    init(eType: CarElementType = CarElementType.None, name: String) {
+        carType = eType
+        imageName = name
+    }
+}
 
 struct ContentView: View {
     @State private var currentWindowOpen: WindowType = WindowType.Home
     @State private var currentPopupOpen: PopupType = PopupType.None
     
-    @State private var sliderValue: Double = 0
-    
     @State private var carElements = [[CarElement]](); //array of array with Cars
+    @State private var carPositionX: CGFloat = 0
     
     @State private var fallingVar: CGFloat = 0
     
@@ -35,6 +46,7 @@ struct ContentView: View {
         case None, Quest, News, Settings
     }
     
+    //if closed, opens the popup. Otherwise, close the popup
     func togglePopup(name: PopupType) {
         if(currentPopupOpen == name) {
             currentPopupOpen = PopupType.None
@@ -44,6 +56,7 @@ struct ContentView: View {
         }
     }
     
+    //sets up the cars arrays
     func setupGame() {
         for _ in 1...10 {
             carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
@@ -70,7 +83,7 @@ struct ContentView: View {
             ZStack {
                 VStack {
                     Text("Pizza Motorist")
-                        .font(.custom("AmericanTypewriter", size: 45))
+                        .font(.custom("ChalkboardSE-Bold", size: 45))
                         .padding(5)
                     
                     Spacer()
@@ -112,7 +125,7 @@ struct ContentView: View {
                     
                     Spacer()
                     Text("Tap to play!")
-                        .font(.custom("AmericanTypewriter", size: 20))
+                        .font(.custom("ChalkboardSE-Bold", size: 24))
                         .padding(25)
                 }
                     .background(Color("HomeBackgroundColor"))
@@ -125,6 +138,9 @@ struct ContentView: View {
                 
                 if(currentPopupOpen == PopupType.Quest) {
                     VStack {
+                        Text("Quests")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+
                         Button() {
                             
                         } label: {
@@ -134,33 +150,54 @@ struct ContentView: View {
                                 .frame(width: 66, height: 66)
                                 .foregroundColor(Color.gray)
                         }
-                    }.background(Color.red)
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.yellow)
                 }
-                else if(currentPopupOpen == PopupType.Settings) {
+                else if(currentPopupOpen == PopupType.News) {
                     VStack {
+                        Text("News")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+
                         Button() {
                             
                         } label: {
-                            Image(systemName: "gearshape")
+                            Image(systemName: "newspaper")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 66, height: 66)
                                 .foregroundColor(Color.gray)
                         }
-                    }.background(Color.red)
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.green)
+                }
+                else if(currentPopupOpen == PopupType.Settings) {
+                    VStack {
+                        Text("Settings")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+
+                        Button() {
+                            
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 66, height: 66)
+                                .foregroundColor(Color.red)
+                        }
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.gray)
                 }
                 
             }
         }
         else if(currentWindowOpen == WindowType.MainGame) {
             ZStack {
-                VStack {
-                    
-                }
-                .background(Color.blue)
-                //let cars: [Int] = [0, 1, 2, 3, 4]
-                
-                
                 VStack {
                     ForEach(carElements, id: \.self) { carArray in
                         HStack {
@@ -176,33 +213,47 @@ struct ContentView: View {
                 .background(Color.gray)
                 .position(x: UIScreen.main.bounds.size.width / 2,
                           y: UIScreen.main.bounds.size.height / 2 + carHeight + CGFloat(fallingVar))
-                //.padding(.top, CGFloat(fallingVar))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     currentWindowOpen = WindowType.Home
                 }
                 
+                
                 VStack {
                     Spacer()
                     HStack {
-                        Spacer()
+                        
+                    }
+                    .frame(width: UIScreen.main.bounds.size.width,
+                           height: UIScreen.main.bounds.size.height / 4)
+                    .background(Color.red.opacity(0.2))
+                    .gesture(DragGesture()
+                        .onChanged { value in
+                            let _ = (carPositionX = value.location.x - (UIScreen.main.bounds.size.width / 2))
+                        }
+                    )
+                        
+                }
+                
+                
+                VStack {
+                    Spacer()
+                    HStack {
                         ZStack {
                             Image("BlueCar")
                                 .resizable()
-                                .position(x: carWidth * sliderValue + (carWidth / 2))
+                                .position(x: carPositionX + carWidth / 2)
                                 .frame(width: carWidth, height: carHeight)
-                            Slider(value: $sliderValue, in: -2...2, step: 1)
                         }
                         
-                        Spacer()
                     }.padding(50)
                 }
                 .onReceive(timer) { time in
-                    fallingVar += 0.6
-                    
-                    if(fallingVar >= carHeight + 7.5) {
-                        fallingVar = 0
-                    }
+//                    fallingVar += 0.6
+//                    
+//                    if(fallingVar >= carHeight + 7.5) {
+//                        fallingVar = 0
+//                    }
                 }
             }
             .background(Color.blue)
