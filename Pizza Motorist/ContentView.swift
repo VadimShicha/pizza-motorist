@@ -9,9 +9,21 @@ import SwiftUI
 
 struct CarGenerator {
     @State private var carsLastGenerated: Bool = false
+    @State var holeCount: Int = 0
     
-    func generateNextRow() {
+    func generateNextRow() -> [CarElement] {
+        //print(holeCount)
+        
+        if(holeCount == 3) {
+            holeCount = 0
+            return [CarElement(eType: CarElementType.Car, name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")]
+        }
+        
         carsLastGenerated = !carsLastGenerated
+        
+        holeCount = 1
+        print(holeCount)
+        return [CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road")]
     }
 }
 
@@ -38,6 +50,8 @@ struct ContentView: View {
     
     @State private var fallingVar: CGFloat = 0
     
+    @State private var carGenerator: CarGenerator = CarGenerator()
+    
     enum WindowType {
         case Home, MainGame
     }
@@ -58,7 +72,7 @@ struct ContentView: View {
     
     //sets up the cars arrays
     func setupGame() {
-        for _ in 1...10 {
+        for _ in 1...12 {
             carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
         }
     }
@@ -198,43 +212,37 @@ struct ContentView: View {
         }
         else if(currentWindowOpen == WindowType.MainGame) {
             ZStack {
-                VStack {
+                VStack(spacing: 0) {
                     ForEach(carElements, id: \.self) { carArray in
-                        HStack {
+                        HStack(spacing: 0) {
                             ForEach(carArray, id: \.self) { car in
-                                Image(car.imageName)
-                                    .resizable()
-                                    .frame(width: carWidth, height: carHeight)
+                                if(car.carType == CarElementType.Car) {
+                                    ZStack {
+                                        Image("Road")
+                                            .resizable()
+                                            .frame(width: carWidth, height: carHeight)
+                                        Image(car.imageName)
+                                            .resizable()
+                                            .frame(width: carWidth, height: carHeight)
+                                    }
+                                }
+                                else {
+                                    Image("Road")
+                                        .resizable()
+                                        .frame(width: carWidth, height: carHeight)
+                                }
                             }
                         }
                     }
                     Spacer()
                 }
-                .background(Color.gray)
+                .background(Color(red: 0.6, green: 0.6, blue: 0.6))
                 .position(x: UIScreen.main.bounds.size.width / 2,
                           y: UIScreen.main.bounds.size.height / 2 + carHeight + CGFloat(fallingVar))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     currentWindowOpen = WindowType.Home
                 }
-                
-                
-                VStack {
-                    Spacer()
-                    HStack {
-                        
-                    }
-                    .frame(width: UIScreen.main.bounds.size.width,
-                           height: UIScreen.main.bounds.size.height / 4)
-                    .background(Color.red.opacity(0.2))
-                    .gesture(DragGesture()
-                        .onChanged { value in
-                            let _ = (carPositionX = value.location.x - (UIScreen.main.bounds.size.width / 2))
-                        }
-                    )
-                        
-                }
-                
                 
                 VStack {
                     Spacer()
@@ -249,11 +257,30 @@ struct ContentView: View {
                     }.padding(50)
                 }
                 .onReceive(timer) { time in
-//                    fallingVar += 0.6
-//                    
-//                    if(fallingVar >= carHeight + 7.5) {
-//                        fallingVar = 0
-//                    }
+                    fallingVar += 0.6
+                    
+                    if(fallingVar >= carHeight + 0) {
+                        fallingVar = 0
+                        
+                        carElements.removeLast()
+                        carElements.insert(carGenerator.generateNextRow(), at: 0)
+                    }
+                }
+                
+                VStack {
+                    Spacer()
+                    HStack {
+                        
+                    }
+                    .frame(width: UIScreen.main.bounds.size.width,
+                           height: UIScreen.main.bounds.size.height / 3)
+                    .background(Color.red.opacity(0.1))
+                    .gesture(DragGesture()
+                        .onChanged { value in
+                            let _ = (carPositionX = value.location.x - (UIScreen.main.bounds.size.width / 2))
+                        }
+                    )
+                        
                 }
             }
             .background(Color.blue)
