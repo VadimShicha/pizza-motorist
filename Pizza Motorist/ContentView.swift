@@ -9,19 +9,34 @@ import SwiftUI
 
 struct CarGenerator {
     @State private var carsLastGenerated: Bool = false
-    @State var holeCount: Int = 0
+    var holeCount: Int = 0
     
-    func generateNextRow() -> [CarElement] {
+    mutating func generateNextRow() -> [CarElement] {
         //print(holeCount)
         
         if(holeCount == 3) {
             holeCount = 0
-            return [CarElement(eType: CarElementType.Car, name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")]
+            
+            var carArr = [CarElement]()
+            
+            var holeIndex = Int.random(in: 0...4)
+            
+            for i in 0...4 {
+                
+                if(i != holeIndex) {
+                    carArr.append(CarElement(eType: CarElementType.Car, name: "RedCar"))
+                }
+                else {
+                    carArr.append(CarElement(eType: CarElementType.None, name: "Road"))
+                }
+            }
+            
+            return carArr
         }
         
         carsLastGenerated = !carsLastGenerated
         
-        holeCount = 1
+        holeCount += 1
         print(holeCount)
         return [CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road"),CarElement(name: "Road")]
     }
@@ -34,10 +49,12 @@ enum CarElementType {
 struct CarElement: Hashable {
     var imageName = ""
     var carType: CarElementType = CarElementType.None
+    var position: [CGFloat]
     
     init(eType: CarElementType = CarElementType.None, name: String) {
         carType = eType
         imageName = name
+        position = [0, 0]
     }
 }
 
@@ -75,6 +92,8 @@ struct ContentView: View {
         for _ in 1...12 {
             carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
         }
+        
+        carElements[7][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
     }
 
     //changes the window while also setting up all the game elements
@@ -90,6 +109,13 @@ struct ContentView: View {
     
     let carWidth = 70.0
     let carHeight = 109.375
+    
+    let carSpeed: CGFloat = 2
+    
+    @State private var currentCarLane: Int = 2
+    
+    @State private var gameRunning: Bool = true
+    //var activeCarPositionArray = [[CGFloat]]
     
     var body: some View {
 
@@ -211,12 +237,16 @@ struct ContentView: View {
             }
         }
         else if(currentWindowOpen == WindowType.MainGame) {
+            if(!gameRunning) {
+                let _ = (currentWindowOpen = WindowType.Home)
+            }
             ZStack {
                 VStack(spacing: 0) {
                     ForEach(carElements, id: \.self) { carArray in
                         HStack(spacing: 0) {
                             ForEach(carArray, id: \.self) { car in
                                 if(car.carType == CarElementType.Car) {
+                                    
                                     ZStack {
                                         Image("Road")
                                             .resizable()
@@ -257,8 +287,17 @@ struct ContentView: View {
                     }.padding(50)
                 }
                 .onReceive(timer) { time in
-                    fallingVar += 0.6
+                    fallingVar += carSpeed / 2
                     
+                    //detect car collisions
+                    for i in 0...4 {
+                        if(carElements[6][i].carType == CarElementType.Car && currentCarLane == i) {
+                            print("LOSE")
+                            gameRunning = false
+                        }
+                    }
+
+                    //loop the car back to top of array when it reaches the bottom
                     if(fallingVar >= carHeight + 0) {
                         fallingVar = 0
                         
@@ -277,7 +316,9 @@ struct ContentView: View {
                     .background(Color.red.opacity(0.1))
                     .gesture(DragGesture()
                         .onChanged { value in
-                            let _ = (carPositionX = value.location.x - (UIScreen.main.bounds.size.width / 2))
+                            let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
+                            
+                            currentCarLane = (Int(round(carPositionX / carWidth)) + 2)
                         }
                     )
                         
