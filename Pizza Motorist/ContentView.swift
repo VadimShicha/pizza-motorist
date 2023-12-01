@@ -59,6 +59,17 @@ struct CarElement: Hashable {
 }
 
 struct ContentView: View {
+    
+    enum WindowType {
+        case Home, MainGame
+    }
+    
+    enum PopupType {
+        case None, Quest, News, Settings, GameOver
+    }
+    
+    @State private var coinAmount: Int = 0
+    
     @State private var currentWindowOpen: WindowType = WindowType.Home
     @State private var currentPopupOpen: PopupType = PopupType.None
     
@@ -69,13 +80,18 @@ struct ContentView: View {
     
     @State private var carGenerator: CarGenerator = CarGenerator()
     
-    enum WindowType {
-        case Home, MainGame
-    }
     
-    enum PopupType {
-        case None, Quest, News, Settings, GameOver
-    }
+    let timer = Timer.publish(every: 0.0015, tolerance: 0.00015, on: .main, in: .common).autoconnect()
+    
+    let carWidth = 70.0
+    let carHeight = 109.375
+    
+    let carSpeed: CGFloat = 2
+    
+    @State private var currentCarLane: [Int] = [2, -1]
+    @State private var distanceTraveled: CGFloat = 0.0
+    
+    @State private var gameRunning: Bool = true
     
     //if closed, opens the popup. Otherwise, close the popup
     func togglePopup(name: PopupType) {
@@ -93,42 +109,40 @@ struct ContentView: View {
             carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
         }
         
-        carElements[7][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
+        //carElements[7][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
     }
 
     //changes the window while also setting up all the game elements
     func startGame() {
         currentWindowOpen = WindowType.MainGame
         
-        if(carElements.count == 0) {
-            setupGame()
-        }
+        carPositionX = 0
+        currentCarLane = [2, -1]
+        distanceTraveled = 0.0
+        
+        currentPopupOpen = PopupType.None
+        gameRunning = true
+        
+        carElements = [[CarElement]]()
+        setupGame()
     }
-    
-    let timer = Timer.publish(every: 0.0015, tolerance: 0.00015, on: .main, in: .common).autoconnect()
-    
-    let carWidth = 70.0
-    let carHeight = 109.375
-    
-    let carSpeed: CGFloat = 2
-    
-    @State private var currentCarLane: Int = 2
-    @State private var distanceTraveled: Int = 0
-    
-    @State private var gameRunning: Bool = true
-    //var activeCarPositionArray = [[CGFloat]]
     
     var body: some View {
 
         if(currentWindowOpen == WindowType.Home) {
             ZStack {
+                
                 VStack {
                     Text("Pizza Motorist")
                         .font(.custom("ChalkboardSE-Bold", size: 45))
-                        .padding(5)
+                        .padding(.top, 5)
+                    Text("Coins: " + String(coinAmount))
+                        .font(.custom("ChalkboardSE-Bold", size: 35))
+                        .foregroundColor(Color.yellow)
+                    
                     
                     Spacer()
-                    HStack {
+                    HStack(spacing: 0) {
                         Spacer()
                         Button() {
                             togglePopup(name: PopupType.Quest)
@@ -137,9 +151,12 @@ struct ContentView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 76, height: 76)
+                                .padding(0)
+                                .background(Color.gray)
+                            
                         }
                     }
-                    HStack {
+                    HStack(spacing: 0) {
                         Spacer()
                         Button() {
                             togglePopup(name: PopupType.News)
@@ -149,9 +166,11 @@ struct ContentView: View {
                                 .scaledToFit()
                                 .frame(width: 66, height: 66)
                                 .foregroundColor(Color.green)
+                                .padding(0)
+                                .background(Color.gray)
                         }
                     }
-                    HStack {
+                    HStack(spacing: 0) {
                         Spacer()
                         Button() {
                             togglePopup(name: PopupType.Settings)
@@ -160,22 +179,23 @@ struct ContentView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 66, height: 66)
-                                .foregroundColor(Color.gray)
+                                .foregroundColor(Color.red)
+                                .padding(0)
+                                .background(Color.gray)
                         }
                     }
-                    
                     Spacer()
                     Text("Tap to play!")
                         .font(.custom("ChalkboardSE-Bold", size: 24))
                         .padding(25)
                 }
-                    .background(Color("HomeBackgroundColor"))
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        /* when the VStack is tapped (not a button on the stack),
-                        start the game */
-                        startGame()
-                    }
+                .background(Color("HomeBackgroundColor"))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    /* when the VStack is tapped (not a button on the stack),
+                    start the game */
+                    startGame()
+                }
                 
                 if(currentPopupOpen == PopupType.Quest) {
                     VStack {
@@ -234,13 +254,9 @@ struct ContentView: View {
                     .padding([.horizontal, .bottom], 50)
                     .background(Color.gray)
                 }
-                
             }
         }
         else if(currentWindowOpen == WindowType.MainGame) {
-            if(!gameRunning) {
-                let _ = (currentWindowOpen = WindowType.Home)
-            }
 
             ZStack {
                 VStack(spacing: 0) {
@@ -291,12 +307,13 @@ struct ContentView: View {
                 .onReceive(timer) { time in
                     if(gameRunning) {
                         fallingVar += carSpeed / 2
-                        distanceTraveled += 1
+                        distanceTraveled += 0.1
                     }
                     
                     //detect car collisions
                     for i in 0...4 {
-                        if(carElements[6][i].carType == CarElementType.Car && currentCarLane == i) {
+                        //if the player car is colliding with a car
+                        if(carElements[6][i].carType == CarElementType.Car && (currentCarLane[0] == i || currentCarLane[1] == i)) {
                             gameRunning = false
                             currentPopupOpen = PopupType.GameOver
                         }
@@ -323,11 +340,56 @@ struct ContentView: View {
                             if(gameRunning) {
                                 let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
                                 
-                                currentCarLane = (Int(round(carPositionX / carWidth)) + 2)
+                                let laneNumber = (carPositionX / carWidth) + 2
+                                var roundedLaneNumber = Int(round(laneNumber))
+                                
+                                //make sure the current lane isn't out of bounds
+                                if(roundedLaneNumber < 0) {
+                                    roundedLaneNumber = 0
+                                }
+                                else if(roundedLaneNumber > 4) {
+                                    roundedLaneNumber = 4
+                                }
+                                
+                                currentCarLane[0] = roundedLaneNumber
+
+                                if(roundedLaneNumber != 0 &&
+                                   laneNumber.truncatingRemainder(dividingBy: 1) < 0.7 &&
+                                   laneNumber.truncatingRemainder(dividingBy: 1) > 0.4) {
+                                    
+                                    currentCarLane[1] = Int(round(laneNumber)) - 1
+                                }
+                                else if(roundedLaneNumber != 4 &&
+                                        laneNumber.truncatingRemainder(dividingBy: 1) > 0.3 &&
+                                        laneNumber.truncatingRemainder(dividingBy: 1) < 0.7) {
+                                    
+                                    currentCarLane[1] = Int(round(laneNumber)) + 1
+                                }
+                                else {
+                                    currentCarLane[1] = -1
+                                }
                             }
                         }
                     )
                         
+                }
+                
+                VStack {
+                    HStack(alignment: .top) {
+                        Button() {
+                            currentWindowOpen = WindowType.Home
+                        } label: {
+                            Image(systemName: "pause.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
+                        }.padding(5)
+                        Spacer()
+                        Text(String(Int(distanceTraveled)) + "ft")
+                            .font(.custom("ChalkboardSE-Bold", size: 30))
+                    }
+                    Spacer()
                 }
                 
                 if(currentPopupOpen == PopupType.GameOver) {
@@ -335,17 +397,29 @@ struct ContentView: View {
                         Text("Game Over")
                             .font(.custom("ChalkboardSE-Bold", size: 35))
                         
-                        Text("You traveled " + String(distanceTraveled) + " feet")
+                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
                             .font(.custom("ChalkboardSE-Bold", size: 25))
 
-                        Button() {
+                        HStack {
+                            Button() {
+                                currentWindowOpen = WindowType.Home
+                            } label: {
+                                Image(systemName: "house.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.gray)
+                            }.padding(.horizontal, 5)
                             
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.gray)
+                            Button() {
+                                startGame()
+                            } label: {
+                                Image(systemName: "gobackward")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.gray)
+                            }.padding(.horizontal, 5)
                         }
                         
                     }
