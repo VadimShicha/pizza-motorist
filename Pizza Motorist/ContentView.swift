@@ -74,7 +74,7 @@ struct ContentView: View {
     }
     
     enum PopupType {
-        case None, Quest, News, Settings
+        case None, Quest, News, Settings, GameOver
     }
     
     //if closed, opens the popup. Otherwise, close the popup
@@ -113,6 +113,7 @@ struct ContentView: View {
     let carSpeed: CGFloat = 2
     
     @State private var currentCarLane: Int = 2
+    @State private var distanceTraveled: Int = 0
     
     @State private var gameRunning: Bool = true
     //var activeCarPositionArray = [[CGFloat]]
@@ -240,6 +241,7 @@ struct ContentView: View {
             if(!gameRunning) {
                 let _ = (currentWindowOpen = WindowType.Home)
             }
+
             ZStack {
                 VStack(spacing: 0) {
                     ForEach(carElements, id: \.self) { carArray in
@@ -287,13 +289,16 @@ struct ContentView: View {
                     }.padding(50)
                 }
                 .onReceive(timer) { time in
-                    fallingVar += carSpeed / 2
+                    if(gameRunning) {
+                        fallingVar += carSpeed / 2
+                        distanceTraveled += 1
+                    }
                     
                     //detect car collisions
                     for i in 0...4 {
                         if(carElements[6][i].carType == CarElementType.Car && currentCarLane == i) {
-                            print("LOSE")
                             gameRunning = false
+                            currentPopupOpen = PopupType.GameOver
                         }
                     }
 
@@ -306,22 +311,46 @@ struct ContentView: View {
                     }
                 }
                 
+                //the input area where you drag your finger to move
                 VStack {
                     Spacer()
-                    HStack {
-                        
-                    }
+                    HStack {}
                     .frame(width: UIScreen.main.bounds.size.width,
                            height: UIScreen.main.bounds.size.height / 3)
                     .background(Color.red.opacity(0.1))
                     .gesture(DragGesture()
                         .onChanged { value in
-                            let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
-                            
-                            currentCarLane = (Int(round(carPositionX / carWidth)) + 2)
+                            if(gameRunning) {
+                                let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
+                                
+                                currentCarLane = (Int(round(carPositionX / carWidth)) + 2)
+                            }
                         }
                     )
                         
+                }
+                
+                if(currentPopupOpen == PopupType.GameOver) {
+                    VStack {
+                        Text("Game Over")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+                        
+                        Text("You traveled " + String(distanceTraveled) + " feet")
+                            .font(.custom("ChalkboardSE-Bold", size: 25))
+
+                        Button() {
+                            
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 66, height: 66)
+                                .foregroundColor(Color.gray)
+                        }
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.yellow)
                 }
             }
             .background(Color.blue)
