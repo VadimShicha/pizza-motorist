@@ -142,59 +142,61 @@ struct ContentView: View {
                     
                     
                     Spacer()
-                    HStack(spacing: 0) {
+                    HStack {
                         Spacer()
-                        Button() {
-                            togglePopup(name: PopupType.Quest)
-                        } label: {
-                            Image("pencil.and.list.clipboard")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 76, height: 76)
-                                .padding(0)
-                                .background(Color.gray)
-                            
-                        }
                     }
-                    HStack(spacing: 0) {
-                        Spacer()
-                        Button() {
-                            togglePopup(name: PopupType.News)
-                        } label: {
-                            Image(systemName: "newspaper")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.green)
-                                .padding(0)
-                                .background(Color.gray)
-                        }
-                    }
-                    HStack(spacing: 0) {
-                        Spacer()
-                        Button() {
-                            togglePopup(name: PopupType.Settings)
-                        } label: {
-                            Image(systemName: "gearshape.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.red)
-                                .padding(0)
-                                .background(Color.gray)
-                        }
-                    }
-                    Spacer()
+                    
                     Text("Tap to play!")
                         .font(.custom("ChalkboardSE-Bold", size: 24))
                         .padding(25)
                 }
-                .background(Color("HomeBackgroundColor"))
                 .contentShape(Rectangle())
                 .onTapGesture {
                     /* when the VStack is tapped (not a button on the stack),
                     start the game */
                     startGame()
+                }
+                
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 0) {
+                            Button() {
+                                togglePopup(name: PopupType.Quest)
+                            } label: {
+                                Image("pencil.and.list.clipboard")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .padding(5)
+    
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.News)
+                            } label: {
+                                Image(systemName: "newspaper")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.green)
+                                    .padding(5)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Settings)
+                            } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.red)
+                                    .padding(5)
+                            }
+                        }
+                        .background(Color.gray)
+                        .cornerRadius(8)
+                    }
+                    Spacer()
                 }
                 
                 if(currentPopupOpen == PopupType.Quest) {
@@ -255,6 +257,7 @@ struct ContentView: View {
                     .background(Color.gray)
                 }
             }
+            .background(Color("HomeBackgroundColor"))
         }
         else if(currentWindowOpen == WindowType.MainGame) {
 
