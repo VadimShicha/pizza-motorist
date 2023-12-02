@@ -65,7 +65,7 @@ struct ContentView: View {
     }
     
     enum PopupType {
-        case None, Quest, News, Settings, GameOver
+        case None, Quest, Shop, News, Settings, GameOver, GamePaused
     }
     
     @State private var coinAmount: Int = 0
@@ -89,6 +89,8 @@ struct ContentView: View {
     
     let carSpeed: CGFloat = 3
     
+    let homeTabColor = Color(red: 128 / 255, green: 78 / 255, blue: 32 / 255)
+    let homeTabColorSelected = Color(red: 115 / 255, green: 69 / 255, blue: 25 / 255)
     
     @State private var currentCarLane: [Int] = [2, -1]
     @State private var distanceTraveled: CGFloat = 0.0
@@ -157,11 +159,22 @@ struct ContentView: View {
                         .font(.custom("ChalkboardSE-Bold", size: 35))
                         .foregroundColor(Color.yellow)
                     
-                    
                     Spacer()
                     HStack {
                         Spacer()
+                        Image("BlueCar")
+                            .resizable()
+                            .frame(width: carWidth * 2, height: carHeight * 2)
+                            .rotationEffect(.degrees(325))
+                        Spacer()
                     }
+                    
+                    
+                    
+                    Spacer()
+//                    HStack {
+//                        Spacer()
+//                    }
                     
                     Text("Tap to play!")
                         .font(.custom("ChalkboardSE-Bold", size: 24))
@@ -187,7 +200,18 @@ struct ContentView: View {
                                     .scaledToFit()
                                     .frame(width: 66, height: 66)
                                     .padding(5)
-                                    .background(currentPopupOpen == PopupType.Quest ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
+                                    .background(currentPopupOpen == PopupType.Quest ? homeTabColorSelected : homeTabColor)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Shop)
+                            } label: {
+                                Image(systemName: "cart.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.orange)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Shop ? homeTabColorSelected : homeTabColor)
                             }
                             Button() {
                                 togglePopup(name: PopupType.News)
@@ -198,7 +222,7 @@ struct ContentView: View {
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.green)
                                     .padding(5)
-                                    .background(currentPopupOpen == PopupType.News ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
+                                    .background(currentPopupOpen == PopupType.News ? homeTabColorSelected : homeTabColor)
                             }
                             Button() {
                                 togglePopup(name: PopupType.Settings)
@@ -209,10 +233,10 @@ struct ContentView: View {
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.red)
                                     .padding(5)
-                                    .background(currentPopupOpen == PopupType.Settings ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
+                                    .background(currentPopupOpen == PopupType.Settings ? homeTabColorSelected : homeTabColor)
                             }
                         }
-                        .background(Color.gray)
+                        .background(homeTabColor)
                         .cornerRadius(8)
                     }
                     Spacer()
@@ -256,6 +280,25 @@ struct ContentView: View {
                     .padding([.horizontal, .bottom], 50)
                     .background(Color.green)
                 }
+                else if(currentPopupOpen == PopupType.Shop) {
+                    VStack {
+                        Text("Shop")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+
+                        Button() {
+                            
+                        } label: {
+                            Image(systemName: "cart.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 66, height: 66)
+                                .foregroundColor(Color.gray)
+                        }
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.orange)
+                }
                 else if(currentPopupOpen == PopupType.Settings) {
                     VStack {
                         Text("Settings")
@@ -276,53 +319,22 @@ struct ContentView: View {
                     .background(Color.gray)
                 }
             }
-            .background(Color("HomeBackgroundColor"))
+            .background(
+                LinearGradient(gradient: Gradient(colors: [
+                    Color(red: 0.6, green: 0.6, blue: 0.6),
+                    Color(red: 0.5, green: 0.5, blue: 0.5),
+                    Color(red: 0.4, green: 0.4, blue: 0.4),
+                    Color(red: 0.5, green: 0.5, blue: 0.5)
+                ]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                //LinearGradient(gradient: Gradient(colors: [Color("HomeBackgroundColor"), Color.red, Color.orange]), startPoint: .topLeading, endPoint: .bottomTrailing)
+            )
         }
         else if(currentWindowOpen == WindowType.MainGame) {
 
             //let _ = print(-((12 * carHeight) - UIScreen.main.bounds.size.height))
             ZStack {
                 
-                    Text("BLAH")
-                    .position(x: 0, y: getScreenYWithYLane(yLane: 6))
-                
-                
-                
-                
-                
-//                VStack {
-//                    //var index = 0
-//                    ForEach(0..<carElements.count) { i in
-//                        HStack {
-//                            Spacer()
-//                            ForEach(carElements[i], id: \.self) { car in
-//                                if(car.carType == CarElementType.Car) {
-//                                    ZStack {
-//                                        Image("Road")
-//                                            .resizable()
-//                                            .frame(width: carWidth, height: carHeight)
-//                                        Image(car.imageName)
-//                                            .resizable()
-//                                            .frame(width: carWidth, height: carHeight)
-//                                    }
-//                                    //.position(y: car.position[1])
-//                                }
-//                                else {
-//                                    Image("Road")
-//                                        .resizable()
-//                                        .frame(width: carWidth, height: carHeight)
-//                                        //.position(y: car.position[1] + fallingVar)
-//                                }
-//                            }
-//                            Spacer()
-//                            
-//                        }
-//                        .position(y: (i * carHeight) + CGFloat(fallingVar))
-//                        
-//                        let _ = print(i)
-//                        //index += 1
-//                    }
-//                }
+                //Text("BLAH").position(x: 0, y: getScreenYWithYLane(yLane: 6))
                 
                 VStack(spacing: 0) {
                     ForEach(carElements, id: \.self) { carArray in
@@ -372,16 +384,19 @@ struct ContentView: View {
                     //detect car collisions
                     for i in 0...4 {
                         //if the player car is colliding with a car
-                        if(carElements[6][i].carType == CarElementType.Car && (currentCarLane[0] == i || currentCarLane[1] == i)) {
-                            let _ = print(abs(getScreenYWithYLane(yLane: 5) - UIScreen.main.bounds.size.height + 235))
-                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135) <= carHeight || abs(getScreenYWithYLane(yLane: 5) - UIScreen.main.bounds.size.height + 235) <= carHeight) {
+                        if((carElements[6][i].carType == CarElementType.Car ||
+                            carElements[7][i].carType == CarElementType.Car) &&
+                           (currentCarLane[0] == i || currentCarLane[1] == i)) {
+                            
+                            //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
+                            
+                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135) <= carHeight) {
                                 gameRunning = false
                                 currentPopupOpen = PopupType.GameOver
                             }
-                            
                         }
                     }
-
+                    
                     //loop the car back to top of array when it reaches the bottom
                     if(fallingVar >= carHeight + 0) {
                         fallingVar = 0
@@ -390,59 +405,60 @@ struct ContentView: View {
                         carElements.insert(carGenerator.generateNextRow(), at: 0)
                     }
                 }
-            
+                
                 
                 
                 //the input area where you drag your finger to move
                 VStack {
                     Spacer()
                     HStack {}
-                    .frame(width: UIScreen.main.bounds.size.width,
-                           height: UIScreen.main.bounds.size.height / 3)
-                    .background(Color.red.opacity(0.1))
-                    .gesture(DragGesture()
-                        .onChanged { value in
-                            if(gameRunning) {
-                                let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
-                                
-                                let laneNumber = (carPositionX / carWidth) + 2
-                                var roundedLaneNumber = Int(round(laneNumber))
-                                
-                                //make sure the current lane isn't out of bounds
-                                if(roundedLaneNumber < 0) {
-                                    roundedLaneNumber = 0
-                                }
-                                else if(roundedLaneNumber > 4) {
-                                    roundedLaneNumber = 4
-                                }
-                                
-                                currentCarLane[0] = roundedLaneNumber
-
-                                if(roundedLaneNumber != 0 &&
-                                   laneNumber.truncatingRemainder(dividingBy: 1) < 0.7 &&
-                                   laneNumber.truncatingRemainder(dividingBy: 1) > 0.4) {
+                        .frame(width: UIScreen.main.bounds.size.width,
+                               height: UIScreen.main.bounds.size.height / 3)
+                        .background(Color.black.opacity(0.05))
+                        .gesture(DragGesture()
+                            .onChanged { value in
+                                if(gameRunning) {
+                                    let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
                                     
-                                    currentCarLane[1] = Int(round(laneNumber)) - 1
-                                }
-                                else if(roundedLaneNumber != 4 &&
-                                        laneNumber.truncatingRemainder(dividingBy: 1) > 0.3 &&
-                                        laneNumber.truncatingRemainder(dividingBy: 1) < 0.7) {
+                                    let laneNumber = (carPositionX / carWidth) + 2
+                                    var roundedLaneNumber = Int(round(laneNumber))
                                     
-                                    currentCarLane[1] = Int(round(laneNumber)) + 1
-                                }
-                                else {
-                                    currentCarLane[1] = -1
+                                    //make sure the current lane isn't out of bounds
+                                    if(roundedLaneNumber < 0) {
+                                        roundedLaneNumber = 0
+                                    }
+                                    else if(roundedLaneNumber > 4) {
+                                        roundedLaneNumber = 4
+                                    }
+                                    
+                                    currentCarLane[0] = roundedLaneNumber
+                                    
+                                    if(roundedLaneNumber != 0 &&
+                                       laneNumber.truncatingRemainder(dividingBy: 1) < 0.7 &&
+                                       laneNumber.truncatingRemainder(dividingBy: 1) > 0.4) {
+                                        
+                                        currentCarLane[1] = Int(round(laneNumber)) - 1
+                                    }
+                                    else if(roundedLaneNumber != 4 &&
+                                            laneNumber.truncatingRemainder(dividingBy: 1) > 0.3 &&
+                                            laneNumber.truncatingRemainder(dividingBy: 1) < 0.7) {
+                                        
+                                        currentCarLane[1] = Int(round(laneNumber)) + 1
+                                    }
+                                    else {
+                                        currentCarLane[1] = -1
+                                    }
                                 }
                             }
-                        }
-                    )
-                        
+                        )
+                    
                 }
                 
                 VStack {
                     HStack(alignment: .top) {
                         Button() {
-                            currentWindowOpen = WindowType.Home
+                            currentPopupOpen = PopupType.GamePaused
+                            gameRunning = false
                         } label: {
                             Image(systemName: "pause.fill")
                                 .resizable()
@@ -464,7 +480,7 @@ struct ContentView: View {
                         
                         Text("You traveled " + String(Int(distanceTraveled)) + " feet")
                             .font(.custom("ChalkboardSE-Bold", size: 25))
-
+                        
                         HStack {
                             Button() {
                                 currentWindowOpen = WindowType.Home
@@ -474,7 +490,7 @@ struct ContentView: View {
                                     .scaledToFit()
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 5)
+                            }.padding(.horizontal, 15)
                             
                             Button() {
                                 startGame()
@@ -484,13 +500,49 @@ struct ContentView: View {
                                     .scaledToFit()
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 5)
+                            }.padding(.horizontal, 15)
                         }
                         
                     }
                     .padding([.horizontal, .bottom], 50)
                     .background(Color.yellow)
                 }
+                else if(currentPopupOpen == PopupType.GamePaused) {
+                    VStack {
+                        Text("Game Paused")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+                        
+                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
+                            .font(.custom("ChalkboardSE-Bold", size: 25))
+                        
+                        HStack {
+                            Button() {
+                                currentWindowOpen = WindowType.Home
+                            } label: {
+                                Image(systemName: "house.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.gray)
+                            }.padding(.horizontal, 15)
+                            
+                            Button() {
+                                currentPopupOpen = PopupType.None
+                                gameRunning = true
+                            } label: {
+                                Image(systemName: "play.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.gray)
+                            }.padding(.horizontal, 15)
+                        }
+                        
+                    }
+                    .padding([.horizontal, .bottom], 50)
+                    .background(Color.orange)
+                }
+                
             }
             .background(Color.blue)
         }
