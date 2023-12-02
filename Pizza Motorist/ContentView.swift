@@ -75,18 +75,20 @@ struct ContentView: View {
     
     @State private var carElements = [[CarElement]](); //array of array with Cars
     @State private var carPositionX: CGFloat = 0
+    @State private var carPositionY: CGFloat = 0
     
-    @State private var fallingVar: CGFloat = 0
+    @State private var fallingVar: CGFloat = 50
     
     @State private var carGenerator: CarGenerator = CarGenerator()
     
     
-    let timer = Timer.publish(every: 0.0015, tolerance: 0.00015, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.003, tolerance: 0.0003, on: .main, in: .common).autoconnect()
     
     let carWidth = 70.0
     let carHeight = 109.375
     
-    let carSpeed: CGFloat = 2
+    let carSpeed: CGFloat = 3
+    
     
     @State private var currentCarLane: [Int] = [2, -1]
     @State private var distanceTraveled: CGFloat = 0.0
@@ -109,7 +111,12 @@ struct ContentView: View {
             carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
         }
         
-        //carElements[7][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
+        carPositionY = getScreenYWithYLane(yLane: 6)
+        
+        carElements[6][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
+        //print(-(((12*109.375) - 1000) / 2) + 6 * (109.375))
+        //print(-(((12 * carHeight) - UIScreen.main.bounds.size.height) / 2) + (6 * carHeight))
+        
     }
 
     //changes the window while also setting up all the game elements
@@ -125,6 +132,16 @@ struct ContentView: View {
         
         carElements = [[CarElement]]()
         setupGame()
+    }
+    
+    func getScreenYWithYLane(yLane: Int) -> CGFloat {
+        
+        //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
+        
+        let firstLaneY = -(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0
+        let lane = firstLaneY + (Double(yLane) * carHeight)
+                    
+        return lane + (carHeight / 2) + fallingVar
     }
     
     var body: some View {
@@ -170,7 +187,7 @@ struct ContentView: View {
                                     .scaledToFit()
                                     .frame(width: 66, height: 66)
                                     .padding(5)
-    
+                                    .background(currentPopupOpen == PopupType.Quest ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
                             }
                             Button() {
                                 togglePopup(name: PopupType.News)
@@ -181,6 +198,7 @@ struct ContentView: View {
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.green)
                                     .padding(5)
+                                    .background(currentPopupOpen == PopupType.News ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
                             }
                             Button() {
                                 togglePopup(name: PopupType.Settings)
@@ -191,6 +209,7 @@ struct ContentView: View {
                                     .frame(width: 66, height: 66)
                                     .foregroundColor(Color.red)
                                     .padding(5)
+                                    .background(currentPopupOpen == PopupType.Settings ? Color(red: 0.4, green: 0.4, blue: 0.4) : Color.gray)
                             }
                         }
                         .background(Color.gray)
@@ -261,7 +280,50 @@ struct ContentView: View {
         }
         else if(currentWindowOpen == WindowType.MainGame) {
 
+            //let _ = print(-((12 * carHeight) - UIScreen.main.bounds.size.height))
             ZStack {
+                
+                    Text("BLAH")
+                    .position(x: 0, y: getScreenYWithYLane(yLane: 6))
+                
+                
+                
+                
+                
+//                VStack {
+//                    //var index = 0
+//                    ForEach(0..<carElements.count) { i in
+//                        HStack {
+//                            Spacer()
+//                            ForEach(carElements[i], id: \.self) { car in
+//                                if(car.carType == CarElementType.Car) {
+//                                    ZStack {
+//                                        Image("Road")
+//                                            .resizable()
+//                                            .frame(width: carWidth, height: carHeight)
+//                                        Image(car.imageName)
+//                                            .resizable()
+//                                            .frame(width: carWidth, height: carHeight)
+//                                    }
+//                                    //.position(y: car.position[1])
+//                                }
+//                                else {
+//                                    Image("Road")
+//                                        .resizable()
+//                                        .frame(width: carWidth, height: carHeight)
+//                                        //.position(y: car.position[1] + fallingVar)
+//                                }
+//                            }
+//                            Spacer()
+//                            
+//                        }
+//                        .position(y: (i * carHeight) + CGFloat(fallingVar))
+//                        
+//                        let _ = print(i)
+//                        //index += 1
+//                    }
+//                }
+                
                 VStack(spacing: 0) {
                     ForEach(carElements, id: \.self) { carArray in
                         HStack(spacing: 0) {
@@ -289,23 +351,17 @@ struct ContentView: View {
                 }
                 .background(Color(red: 0.6, green: 0.6, blue: 0.6))
                 .position(x: UIScreen.main.bounds.size.width / 2,
-                          y: UIScreen.main.bounds.size.height / 2 + carHeight + CGFloat(fallingVar))
+                          y: UIScreen.main.bounds.size.height / 2 + CGFloat(fallingVar)) // + carHeight
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    currentWindowOpen = WindowType.Home
-                }
                 
                 VStack {
                     Spacer()
                     HStack {
-                        ZStack {
-                            Image("BlueCar")
-                                .resizable()
-                                .position(x: carPositionX + carWidth / 2)
-                                .frame(width: carWidth, height: carHeight)
-                        }
-                        
-                    }.padding(50)
+                        Image("BlueCar")
+                            .resizable()
+                            .position(x: carPositionX + carWidth / 2)
+                            .frame(width: carWidth, height: carHeight)
+                    }.padding(25)
                 }
                 .onReceive(timer) { time in
                     if(gameRunning) {
@@ -317,8 +373,12 @@ struct ContentView: View {
                     for i in 0...4 {
                         //if the player car is colliding with a car
                         if(carElements[6][i].carType == CarElementType.Car && (currentCarLane[0] == i || currentCarLane[1] == i)) {
-                            gameRunning = false
-                            currentPopupOpen = PopupType.GameOver
+                            let _ = print(abs(getScreenYWithYLane(yLane: 5) - UIScreen.main.bounds.size.height + 235))
+                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135) <= carHeight || abs(getScreenYWithYLane(yLane: 5) - UIScreen.main.bounds.size.height + 235) <= carHeight) {
+                                gameRunning = false
+                                currentPopupOpen = PopupType.GameOver
+                            }
+                            
                         }
                     }
 
@@ -330,6 +390,8 @@ struct ContentView: View {
                         carElements.insert(carGenerator.generateNextRow(), at: 0)
                     }
                 }
+            
+                
                 
                 //the input area where you drag your finger to move
                 VStack {
