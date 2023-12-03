@@ -58,6 +58,31 @@ struct CarElement: Hashable {
     }
 }
 
+enum QuestType {
+    case DriveDistance
+}
+
+struct Quest {
+    var questType: QuestType = QuestType.DriveDistance
+    var progress: Int = 0
+    var valueNeeded: Int = 0
+    var reward: Int = 100
+    
+    init(type: QuestType, value: Int, reward: Int = 100) {
+        questType = type
+        valueNeeded = value
+        self.reward = reward
+    }
+    
+    func getQuestTitle() -> String {
+        if(questType == QuestType.DriveDistance) {
+            return "Drive for " + String(valueNeeded) + " feet"
+        }
+        
+        return ""
+    }
+}
+
 struct ContentView: View {
     
     enum WindowType {
@@ -68,7 +93,7 @@ struct ContentView: View {
         case None, Quest, Shop, News, Settings, GameOver, GamePaused
     }
     
-    @State private var coinAmount: Int = 0
+    @State private var coinAmount: Int = 100
     
     @State private var currentWindowOpen: WindowType = WindowType.Home
     @State private var currentPopupOpen: PopupType = PopupType.None
@@ -96,6 +121,14 @@ struct ContentView: View {
     @State private var distanceTraveled: CGFloat = 0.0
     
     @State private var gameRunning: Bool = true
+    
+    @State private var showMoveArea = true
+    
+    @State private var quests: [Quest] = [
+        Quest(type: QuestType.DriveDistance, value: 1000, reward: 100),
+        Quest(type: QuestType.DriveDistance, value: 10000, reward: 200),
+        Quest(type: QuestType.DriveDistance, value: 20000, reward: 300)
+    ]
     
     //if closed, opens the popup. Otherwise, close the popup
     func togglePopup(name: PopupType) {
@@ -136,6 +169,14 @@ struct ContentView: View {
         setupGame()
     }
     
+    func endGame() {
+        if(!gameRunning) {return} //sometimes this function will be called multiple times
+            
+        gameRunning = false
+        
+        coinAmount += Int(round(distanceTraveled / 10))
+    }
+    
     func getScreenYWithYLane(yLane: Int) -> CGFloat {
         
         //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
@@ -151,21 +192,38 @@ struct ContentView: View {
         if(currentWindowOpen == WindowType.Home) {
             ZStack {
                 
-                VStack {
+                VStack(spacing: 0) {
                     Text("Pizza Motorist")
                         .font(.custom("ChalkboardSE-Bold", size: 45))
                         .padding(.top, 5)
-                    Text("Coins: " + String(coinAmount))
-                        .font(.custom("ChalkboardSE-Bold", size: 35))
-                        .foregroundColor(Color.yellow)
+                    
+                    HStack {
+                        Image("Coin")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                        Text(String(coinAmount))
+                            .font(.custom("ChalkboardSE-Bold", size: 40))
+                            .foregroundColor(Color.yellow)
+                            .padding(.bottom, 5)
+                    }
                     
                     Spacer()
                     HStack {
                         Spacer()
-                        Image("BlueCar")
-                            .resizable()
-                            .frame(width: carWidth * 2, height: carHeight * 2)
-                            .rotationEffect(.degrees(325))
+                        VStack {
+                            Image("BlueCar")
+                                .resizable()
+                                .frame(width: carWidth * 2, height: carHeight * 2)
+                                .rotationEffect(.degrees(325))
+                                .shadow(color: Color(red: 0.3, green: 0.3, blue: 0.3), radius: 3, x: 0, y: 20)
+                            Button() {
+                                
+                            } label: {
+                                Text("Change Car")
+                                    .font(.custom("ChalkboardSE-Bold", size: 15))
+                                    .foregroundColor(Color.green)
+                            }
+                        }
                         Spacer()
                     }
                     
@@ -231,7 +289,7 @@ struct ContentView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.red)
+                                    .foregroundColor(Color.gray)
                                     .padding(5)
                                     .background(currentPopupOpen == PopupType.Settings ? homeTabColorSelected : homeTabColor)
                             }
@@ -246,20 +304,69 @@ struct ContentView: View {
                     VStack {
                         Text("Quests")
                             .font(.custom("ChalkboardSE-Bold", size: 35))
+                        
+                        ForEach(0...2, id: \.self) { i in
+                            VStack {
+                                HStack {
+                                    Text(quests[i].getQuestTitle())
+                                        .font(.custom("ChalkboardSE-Bold", size: 20))
+                                        .foregroundColor(Color.gray)
+                                    Spacer()
+                                    Button() {
+                                        
+                                    } label: {
+                                        HStack {
+                                            Text(String(quests[i].reward))
+                                                .font(.custom("ChalkboardSE-Bold", size: 20))
+                                                .foregroundColor(Color.red)
+                                                .padding(1)
+                                            Image("Coin")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 25, height: 25)
+                                        }
+                                        
+                                    }
+                                    .padding(3)
+                                    .background(Color.brown)
+                                    .cornerRadius(5)
+                                }
+                                
+                                Text(String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
+                                    .font(.custom("ChalkboardSE-Bold", size: 18))
+                                    .foregroundColor(Color.red)
+                                
+                            }.padding(8)
+                            
+                        }
+                    }
+                    .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .background(Color.yellow)
+                    .padding(.trailing, 80)
+                    .padding(.leading, 3)
+                }
+                else if(currentPopupOpen == PopupType.Shop) {
+                    VStack {
+                        Text("Shop")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
 
                         Button() {
                             
                         } label: {
-                            Image(systemName: "gearshape.fill")
+                            Image(systemName: "cart.fill")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 66, height: 66)
                                 .foregroundColor(Color.gray)
                         }
                         
+                        
                     }
-                    .padding([.horizontal, .bottom], 50)
-                    .background(Color.yellow)
+                    .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .padding(.bottom, 40)
+                    .background(Color.orange)
+                    .padding(.trailing, 80)
+                    .padding(.leading, 3)
                 }
                 else if(currentPopupOpen == PopupType.News) {
                     VStack {
@@ -277,27 +384,11 @@ struct ContentView: View {
                         }
                         
                     }
-                    .padding([.horizontal, .bottom], 50)
+                    .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .padding(.bottom, 40)
                     .background(Color.green)
-                }
-                else if(currentPopupOpen == PopupType.Shop) {
-                    VStack {
-                        Text("Shop")
-                            .font(.custom("ChalkboardSE-Bold", size: 35))
-
-                        Button() {
-                            
-                        } label: {
-                            Image(systemName: "cart.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.gray)
-                        }
-                        
-                    }
-                    .padding([.horizontal, .bottom], 50)
-                    .background(Color.orange)
+                    .padding(.trailing, 80)
+                    .padding(.leading, 3)
                 }
                 else if(currentPopupOpen == PopupType.Settings) {
                     VStack {
@@ -314,9 +405,21 @@ struct ContentView: View {
                                 .foregroundColor(Color.red)
                         }
                         
+                        HStack {
+                            //Text("Show move area")
+                                //.font(.custom("ChalkboardSE-Bold", size: 25))
+                           
+                            Toggle("Show move area", isOn: $showMoveArea)
+                                .font(.custom("ChalkboardSE-Bold", size: 25))
+                        }
+                        .padding(8)
+                        
+                        
                     }
-                    .padding([.horizontal, .bottom], 50)
+                    .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
                     .background(Color.gray)
+                    .padding(.trailing, 80)
+                    .padding(.leading, 3)
                 }
             }
             .background(
@@ -391,7 +494,7 @@ struct ContentView: View {
                             //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
                             
                             if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135) <= carHeight) {
-                                gameRunning = false
+                                endGame()
                                 currentPopupOpen = PopupType.GameOver
                             }
                         }
@@ -414,7 +517,7 @@ struct ContentView: View {
                     HStack {}
                         .frame(width: UIScreen.main.bounds.size.width,
                                height: UIScreen.main.bounds.size.height / 3)
-                        .background(Color.black.opacity(0.05))
+                        .background(showMoveArea ? Color.black.opacity(0.05) : Color.black.opacity(0))
                         .gesture(DragGesture()
                             .onChanged { value in
                                 if(gameRunning) {
@@ -458,7 +561,7 @@ struct ContentView: View {
                     HStack(alignment: .top) {
                         Button() {
                             currentPopupOpen = PopupType.GamePaused
-                            gameRunning = false
+                            endGame()
                         } label: {
                             Image(systemName: "pause.fill")
                                 .resizable()
