@@ -12,24 +12,40 @@ struct CarGenerator {
     var holeCount: Int = 0
     
     mutating func generateNextRow() -> [CarElement] {
-        //print(holeCount)
-        
         if(holeCount == 3) {
+            
+            var holeAmount = 1
+            
+            if(Int.random(in: 0...2) == 0) {
+                holeAmount = 2
+            }
+            else {
+                holeAmount = 1
+            }
+            
             holeCount = 0
             
             var carArr = [CarElement]()
             
-            var holeIndex = Int.random(in: 0...4)
+            let holeIndex = Int.random(in: 0...4)
+            
+            var secondHoleIndex = holeIndex
+            
+            if(holeAmount > 1) {
+                secondHoleIndex = Int.random(in: 0...4)
+            }
             
             for i in 0...4 {
                 
-                if(i != holeIndex) {
+                if(i != holeIndex && i != secondHoleIndex) {
                     carArr.append(CarElement(eType: CarElementType.Car, name: "RedCar"))
                 }
                 else {
                     carArr.append(CarElement(eType: CarElementType.None, name: "Road"))
                 }
             }
+            
+            
             
             return carArr
         }
@@ -140,6 +156,7 @@ struct ContentView: View {
     let carHeight = 109.375
     
     let carSpeed: CGFloat = 3
+    @State private var carSpeedMultiplier: CGFloat = 1
     
     let homeTabColor = Color(red: 128 / 255, green: 78 / 255, blue: 32 / 255)
     let homeTabColorSelected = Color(red: 115 / 255, green: 69 / 255, blue: 25 / 255)
@@ -151,6 +168,8 @@ struct ContentView: View {
     @State private var gameRunning: Bool = true
     
     @State private var showMoveArea = true
+    
+    @State private var startRan = false
     
     @State private var quests: [Quest] = [
         QuestGenerator.generateQuest(),
@@ -202,6 +221,7 @@ struct ContentView: View {
     func endGame() {
         if(!gameRunning) {return} //sometimes this function will be called multiple times
             
+        carSpeedMultiplier = 1
         gameRunning = false
         
         if(Int(distanceTraveled) > bestDistance) {
@@ -242,9 +262,14 @@ struct ContentView: View {
         coinAmount = 100
         bestDistance = 0
     }
-    
-    var body: some View {
 
+    //code that runs once after the first render
+    func startLogic() {
+        print("Start")
+        loadData()
+    }
+
+    var body: some View {
         if(currentWindowOpen == WindowType.Home) {
             ZStack {
                 
@@ -382,7 +407,7 @@ struct ContentView: View {
                             Text("Best distance:")
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                             Spacer()
-                            Text(String(bestDistance))
+                            Text(String(bestDistance) + "ft")
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                         }.padding(8)
                         
@@ -555,13 +580,35 @@ struct ContentView: View {
                         Image("BlueCar")
                             .resizable()
                             .position(x: carPositionX + carWidth / 2)
-                            .frame(width: carWidth, height: carHeight)
+                            .frame(width: carWidth / 1.15, height: carHeight / 1.15)
                     }.padding(25)
                 }
                 .onReceive(timer) { time in
                     if(gameRunning) {
-                        fallingVar += carSpeed / 2
-                        distanceTraveled += 0.1
+                        fallingVar += ((carSpeed * carSpeedMultiplier) / 2)
+                        distanceTraveled += (0.1 * ((carSpeed * carSpeedMultiplier) / 3))
+                        
+                        if(distanceTraveled >= 1000) {
+                            carSpeedMultiplier = 1.5
+                        }
+                        else if(distanceTraveled >= 800) {
+                            carSpeedMultiplier = 1.4
+                        }
+                        else if(distanceTraveled >= 650) {
+                            carSpeedMultiplier = 1.3
+                        }
+                        else if(distanceTraveled >= 500) {
+                            carSpeedMultiplier = 1.2
+                        }
+                        else if(distanceTraveled >= 350) {
+                            carSpeedMultiplier = 1.15
+                        }
+                        else if(distanceTraveled >= 200) {
+                            carSpeedMultiplier = 1.1
+                        }
+                        else if(distanceTraveled >= 100) {
+                            carSpeedMultiplier = 1.05
+                        }
                     }
                     
                     //detect car collisions
@@ -573,7 +620,7 @@ struct ContentView: View {
                             
                             //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
                             
-                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135) <= carHeight) {
+                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135 - 25) <= carHeight) {
                                 endGame()
                                 currentPopupOpen = PopupType.GameOver
                             }
@@ -618,14 +665,14 @@ struct ContentView: View {
                                     currentCarLane[0] = roundedLaneNumber
                                     
                                     if(roundedLaneNumber != 0 &&
-                                       laneNumber.truncatingRemainder(dividingBy: 1) < 0.7 &&
+                                       laneNumber.truncatingRemainder(dividingBy: 1) < 0.6 &&
                                        laneNumber.truncatingRemainder(dividingBy: 1) > 0.4) {
                                         
                                         currentCarLane[1] = Int(round(laneNumber)) - 1
                                     }
                                     else if(roundedLaneNumber != 4 &&
-                                            laneNumber.truncatingRemainder(dividingBy: 1) > 0.3 &&
-                                            laneNumber.truncatingRemainder(dividingBy: 1) < 0.7) {
+                                            laneNumber.truncatingRemainder(dividingBy: 1) > 0.4 &&
+                                            laneNumber.truncatingRemainder(dividingBy: 1) < 0.6) {
                                         
                                         currentCarLane[1] = Int(round(laneNumber)) + 1
                                     }
