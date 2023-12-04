@@ -58,8 +58,8 @@ struct CarElement: Hashable {
     }
 }
 
-enum QuestType {
-    case DriveDistance
+enum QuestType: CaseIterable {
+    case DriveDistance, CollectCoins, DriveToDistance
 }
 
 struct Quest {
@@ -78,8 +78,35 @@ struct Quest {
         if(questType == QuestType.DriveDistance) {
             return "Drive for " + String(valueNeeded) + " feet"
         }
+        else if(questType == QuestType.CollectCoins) {
+            return "Collect " + String(valueNeeded) + " coins"
+        }
+        else if(questType == QuestType.DriveToDistance) {
+            return "Drive " + String(valueNeeded) + " feet in one run"
+        }
         
         return ""
+    }
+}
+
+struct QuestGenerator {
+    static func generateQuest() -> Quest{
+//        let questType = QuestType.allCases[Int.random(in: 0...QuestType.allCases.count - 1)]
+        
+        let quests = [
+            Quest(type: QuestType.DriveDistance, value: 500, reward: 20),
+            Quest(type: QuestType.DriveDistance, value: 1300, reward: 100),
+            Quest(type: QuestType.DriveDistance, value: 2000, reward: 150),
+            
+            Quest(type: QuestType.CollectCoins, value: 200, reward: 30),
+            Quest(type: QuestType.CollectCoins, value: 500, reward: 80),
+            Quest(type: QuestType.CollectCoins, value: 1000, reward: 200),
+            
+            Quest(type: QuestType.DriveToDistance, value: 2500, reward: 200),
+            Quest(type: QuestType.DriveToDistance, value: 5000, reward: 600)
+        ]
+        
+        return quests[Int.random(in: 0...quests.count - 1)]
     }
 }
 
@@ -90,7 +117,7 @@ struct ContentView: View {
     }
     
     enum PopupType {
-        case None, Quest, Shop, News, Settings, GameOver, GamePaused
+        case None, Quest, Shop, Stats, Settings, GameOver, GamePaused
     }
     
     @State private var coinAmount: Int = 100
@@ -119,15 +146,16 @@ struct ContentView: View {
     
     @State private var currentCarLane: [Int] = [2, -1]
     @State private var distanceTraveled: CGFloat = 0.0
+    @State private var bestDistance: Int = 0
     
     @State private var gameRunning: Bool = true
     
     @State private var showMoveArea = true
     
     @State private var quests: [Quest] = [
-        Quest(type: QuestType.DriveDistance, value: 1000, reward: 100),
-        Quest(type: QuestType.DriveDistance, value: 10000, reward: 200),
-        Quest(type: QuestType.DriveDistance, value: 20000, reward: 300)
+        QuestGenerator.generateQuest(),
+        QuestGenerator.generateQuest(),
+        QuestGenerator.generateQuest()
     ]
     
     //if closed, opens the popup. Otherwise, close the popup
@@ -136,7 +164,9 @@ struct ContentView: View {
             currentPopupOpen = PopupType.None
         }
         else {
-            currentPopupOpen = name
+            withAnimation(.spring()) {
+                currentPopupOpen = name
+            }
         }
     }
     
@@ -174,7 +204,12 @@ struct ContentView: View {
             
         gameRunning = false
         
-        coinAmount += Int(round(distanceTraveled / 10))
+        if(Int(distanceTraveled) > bestDistance) {
+            bestDistance = Int(distanceTraveled)
+        }
+        
+        coinAmount += Int(distanceTraveled / 10)
+        saveData()
     }
     
     func getScreenYWithYLane(yLane: Int) -> CGFloat {
@@ -187,13 +222,34 @@ struct ContentView: View {
         return lane + (carHeight / 2) + fallingVar
     }
     
+    func saveData() {
+        UserDefaults.standard.set(coinAmount, forKey: "coinAmount")
+        UserDefaults.standard.set(bestDistance, forKey: "bestDistance")
+    }
+    
+    func loadData() {
+        if(UserDefaults.standard.object(forKey: "coinAmount") != nil) {
+            coinAmount = UserDefaults.standard.integer(forKey: "coinAmount")
+        }
+        if(UserDefaults.standard.object(forKey: "bestDistance") != nil) {
+            bestDistance = UserDefaults.standard.integer(forKey: "bestDistance")
+        }
+    }
+    
+    func wipeData() {
+        UserDefaults.standard.removeObject(forKey: "coinAmount")
+        UserDefaults.standard.removeObject(forKey: "bestDistance")
+        coinAmount = 100
+        bestDistance = 0
+    }
+    
     var body: some View {
 
         if(currentWindowOpen == WindowType.Home) {
             ZStack {
                 
                 VStack(spacing: 0) {
-                    Text("Pizza Motorist")
+                    Text("Speedy Pizzas")
                         .font(.custom("ChalkboardSE-Bold", size: 45))
                         .padding(.top, 5)
                     
@@ -245,60 +301,7 @@ struct ContentView: View {
                     startGame()
                 }
                 
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 0) {
-                            Button() {
-                                togglePopup(name: PopupType.Quest)
-                            } label: {
-                                Image("pencil.and.list.clipboard")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .padding(5)
-                                    .background(currentPopupOpen == PopupType.Quest ? homeTabColorSelected : homeTabColor)
-                            }
-                            Button() {
-                                togglePopup(name: PopupType.Shop)
-                            } label: {
-                                Image(systemName: "cart.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.orange)
-                                    .padding(5)
-                                    .background(currentPopupOpen == PopupType.Shop ? homeTabColorSelected : homeTabColor)
-                            }
-                            Button() {
-                                togglePopup(name: PopupType.News)
-                            } label: {
-                                Image(systemName: "newspaper")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.green)
-                                    .padding(5)
-                                    .background(currentPopupOpen == PopupType.News ? homeTabColorSelected : homeTabColor)
-                            }
-                            Button() {
-                                togglePopup(name: PopupType.Settings)
-                            } label: {
-                                Image(systemName: "gearshape.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.gray)
-                                    .padding(5)
-                                    .background(currentPopupOpen == PopupType.Settings ? homeTabColorSelected : homeTabColor)
-                            }
-                        }
-                        .background(homeTabColor)
-                        .cornerRadius(8)
-                    }
-                    Spacer()
-                }
+                
                 
                 if(currentPopupOpen == PopupType.Quest) {
                     VStack {
@@ -341,6 +344,7 @@ struct ContentView: View {
                         }
                     }
                     .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .transition(.move(edge: .trailing))
                     .background(Color.yellow)
                     .padding(.trailing, 80)
                     .padding(.leading, 3)
@@ -363,28 +367,28 @@ struct ContentView: View {
                         
                     }
                     .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .transition(.move(edge: .trailing))
                     .padding(.bottom, 40)
                     .background(Color.orange)
                     .padding(.trailing, 80)
                     .padding(.leading, 3)
                 }
-                else if(currentPopupOpen == PopupType.News) {
+                else if(currentPopupOpen == PopupType.Stats) {
                     VStack {
-                        Text("News")
+                        Text("Stats")
                             .font(.custom("ChalkboardSE-Bold", size: 35))
-
-                        Button() {
-                            
-                        } label: {
-                            Image(systemName: "newspaper")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.gray)
-                        }
+                        
+                        HStack {
+                            Text("Best distance:")
+                                .font(.custom("ChalkboardSE-Bold", size: 20))
+                            Spacer()
+                            Text(String(bestDistance))
+                                .font(.custom("ChalkboardSE-Bold", size: 20))
+                        }.padding(8)
                         
                     }
                     .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .transition(.move(edge: .trailing))
                     .padding(.bottom, 40)
                     .background(Color.green)
                     .padding(.trailing, 80)
@@ -406,20 +410,96 @@ struct ContentView: View {
                         }
                         
                         HStack {
-                            //Text("Show move area")
-                                //.font(.custom("ChalkboardSE-Bold", size: 25))
-                           
                             Toggle("Show move area", isOn: $showMoveArea)
                                 .font(.custom("ChalkboardSE-Bold", size: 25))
                         }
                         .padding(8)
                         
-                        
+                        HStack {
+                            Button() {
+                                loadData()
+                            } label: {
+                                Text("Load Data")
+                                    .font(.custom("ChalkboardSE-Bold", size: 18))
+                                    .foregroundColor(Color.white)
+                            }
+                            .padding(5)
+                            .background(Color.blue)
+                            .cornerRadius(5)
+                            
+                            Button() {
+                                wipeData()
+                            } label: {
+                                Text("Wipe Data")
+                                    .font(.custom("ChalkboardSE-Bold", size: 18))
+                                    .foregroundColor(Color.white)
+                            }
+                            .padding(5)
+                            .background(Color.red)
+                            .cornerRadius(5)
+                        }
+                        .padding(8)
                     }
                     .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .transition(.move(edge: .trailing))
                     .background(Color.gray)
                     .padding(.trailing, 80)
                     .padding(.leading, 3)
+                }
+                
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 0) {
+                            Button() {
+                                togglePopup(name: PopupType.Quest)
+                            } label: {
+                                Image("pencil.and.list.clipboard")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Quest ? homeTabColorSelected : homeTabColor)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Shop)
+                            } label: {
+                                Image(systemName: "cart.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.orange)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Shop ? homeTabColorSelected : homeTabColor)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Stats)
+                            } label: {
+                                Image(systemName: "chart.bar.xaxis")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.green)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Stats ? homeTabColorSelected : homeTabColor)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Settings)
+                            } label: {
+                                Image(systemName: "gearshape.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.gray)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Settings ? homeTabColorSelected : homeTabColor)
+                            }
+                        }
+                        .background(homeTabColor)
+                        .cornerRadius(8)
+                    }
+                    Spacer()
                 }
             }
             .background(
@@ -518,6 +598,7 @@ struct ContentView: View {
                         .frame(width: UIScreen.main.bounds.size.width,
                                height: UIScreen.main.bounds.size.height / 3)
                         .background(showMoveArea ? Color.black.opacity(0.05) : Color.black.opacity(0))
+                        .contentShape(Rectangle())
                         .gesture(DragGesture()
                             .onChanged { value in
                                 if(gameRunning) {
