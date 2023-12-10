@@ -114,8 +114,9 @@ struct QuestGenerator {
             Quest(type: QuestType.DriveDistance, value: 1300, reward: 100),
             Quest(type: QuestType.DriveDistance, value: 2000, reward: 150),
             
-            Quest(type: QuestType.CollectCoins, value: 200, reward: 30),
+            Quest(type: QuestType.CollectCoins, value: 400, reward: 30),
             Quest(type: QuestType.CollectCoins, value: 500, reward: 80),
+            Quest(type: QuestType.CollectCoins, value: 800, reward: 100),
             Quest(type: QuestType.CollectCoins, value: 1000, reward: 200),
             
             Quest(type: QuestType.DriveToDistance, value: 2500, reward: 200),
@@ -152,8 +153,11 @@ struct ContentView: View {
     
     let timer = Timer.publish(every: 0.003, tolerance: 0.0003, on: .main, in: .common).autoconnect()
     
-    let carWidth = 70.0
-    let carHeight = 109.375
+    let carWidth = 70.0 / 1.2
+    let carHeight = 109.375 / 1.2
+    
+    let roadWidth = 70.0
+    let roadHeight = 109.375
     
     let carSpeed: CGFloat = 3
     @State private var carSpeedMultiplier: CGFloat = 1
@@ -167,7 +171,7 @@ struct ContentView: View {
     
     @State private var gameRunning: Bool = true
     
-    @State private var showMoveArea = true
+    @State private var showMoveArea = false
     
     @State private var startRan = false
     
@@ -236,10 +240,10 @@ struct ContentView: View {
         
         //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
         
-        let firstLaneY = -(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0
-        let lane = firstLaneY + (Double(yLane) * carHeight)
+        let firstLaneY = -(12 * roadHeight - UIScreen.main.bounds.size.height) / 2.0
+        let lane = firstLaneY + (Double(yLane) * roadHeight)
                     
-        return lane + (carHeight / 2) + fallingVar
+        return lane + (roadHeight / 2) + fallingVar
     }
     
     func saveData() {
@@ -556,7 +560,7 @@ struct ContentView: View {
                                     ZStack {
                                         Image("Road")
                                             .resizable()
-                                            .frame(width: carWidth, height: carHeight)
+                                            .frame(width: roadWidth, height: roadHeight)
                                         Image(car.imageName)
                                             .resizable()
                                             .frame(width: carWidth, height: carHeight)
@@ -565,7 +569,7 @@ struct ContentView: View {
                                 else {
                                     Image("Road")
                                         .resizable()
-                                        .frame(width: carWidth, height: carHeight)
+                                        .frame(width: roadWidth, height: roadHeight)
                                 }
                             }
                         }
@@ -614,6 +618,8 @@ struct ContentView: View {
                         }
                     }
                     
+                    print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10))
+                    
                     //detect car collisions
                     for i in 0...4 {
                         //if the player car is colliding with a car
@@ -623,7 +629,8 @@ struct ContentView: View {
                             
                             //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
                             
-                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135 - 25) <= carHeight) {
+                            
+                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10) <= roadHeight) {
                                 endGame()
                                 currentPopupOpen = PopupType.GameOver
                             }
@@ -631,7 +638,7 @@ struct ContentView: View {
                     }
                     
                     //loop the car back to top of array when it reaches the bottom
-                    if(fallingVar >= carHeight + 0) {
+                    if(fallingVar >= roadHeight + 0) {
                         fallingVar = 0
                         
                         carElements.removeLast()
@@ -654,7 +661,7 @@ struct ContentView: View {
                                 if(gameRunning) {
                                     let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
                                     
-                                    let laneNumber = (carPositionX / carWidth) + 2
+                                    let laneNumber = (carPositionX / roadWidth) + 2
                                     var roundedLaneNumber = Int(round(laneNumber))
                                     
                                     //make sure the current lane isn't out of bounds
@@ -669,21 +676,21 @@ struct ContentView: View {
                                     print(laneNumber)
                                     
                                     
-                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
-                                    
-                                    if(laneDecimal > 0.4) {
-                                        if(roundedLaneNumber != 4 && laneDecimal < 0.6) {
-                                            currentCarLane[1] = Int(round(laneNumber)) + 1
-                                        }
-                                    }
-                                    else if(laneDecimal < 0.6) {
-                                        if(roundedLaneNumber != 0 && laneDecimal > 0.4) {
-                                            currentCarLane[1] = Int(round(laneNumber)) - 1
-                                        }
-                                    }
-                                    else {
-                                        currentCarLane[1] = -1
-                                    }
+//                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
+//                                    
+//                                    if(laneDecimal > 0.4) {
+//                                        if(roundedLaneNumber != 4 && laneDecimal < 0.6) {
+//                                            currentCarLane[1] = Int(round(laneNumber)) + 1
+//                                        }
+//                                    }
+//                                    else if(laneDecimal < 0.6) {
+//                                        if(roundedLaneNumber != 0 && laneDecimal > 0.4) {
+//                                            currentCarLane[1] = Int(round(laneNumber)) - 1
+//                                        }
+//                                    }
+//                                    else {
+//                                        currentCarLane[1] = -1
+//                                    }
                                 }
                             }
                         )
