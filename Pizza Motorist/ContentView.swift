@@ -268,7 +268,7 @@ struct ContentView: View {
         print("Start")
         loadData()
     }
-
+    
     var body: some View {
         if(currentWindowOpen == WindowType.Home) {
             ZStack {
@@ -536,6 +536,9 @@ struct ContentView: View {
                 ]), startPoint: .topLeading, endPoint: .bottomTrailing)
                 //LinearGradient(gradient: Gradient(colors: [Color("HomeBackgroundColor"), Color.red, Color.orange]), startPoint: .topLeading, endPoint: .bottomTrailing)
             )
+            .onAppear() {
+                loadData()
+            }
         }
         else if(currentWindowOpen == WindowType.MainGame) {
 
@@ -663,18 +666,20 @@ struct ContentView: View {
                                     }
                                     
                                     currentCarLane[0] = roundedLaneNumber
+                                    print(laneNumber)
                                     
-                                    if(roundedLaneNumber != 0 &&
-                                       laneNumber.truncatingRemainder(dividingBy: 1) < 0.6 &&
-                                       laneNumber.truncatingRemainder(dividingBy: 1) > 0.4) {
-                                        
-                                        currentCarLane[1] = Int(round(laneNumber)) - 1
+                                    
+                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
+                                    
+                                    if(laneDecimal > 0.4) {
+                                        if(roundedLaneNumber != 4 && laneDecimal < 0.6) {
+                                            currentCarLane[1] = Int(round(laneNumber)) + 1
+                                        }
                                     }
-                                    else if(roundedLaneNumber != 4 &&
-                                            laneNumber.truncatingRemainder(dividingBy: 1) > 0.4 &&
-                                            laneNumber.truncatingRemainder(dividingBy: 1) < 0.6) {
-                                        
-                                        currentCarLane[1] = Int(round(laneNumber)) + 1
+                                    else if(laneDecimal < 0.6) {
+                                        if(roundedLaneNumber != 0 && laneDecimal > 0.4) {
+                                            currentCarLane[1] = Int(round(laneNumber)) - 1
+                                        }
                                     }
                                     else {
                                         currentCarLane[1] = -1
