@@ -78,7 +78,7 @@ enum QuestType: CaseIterable {
     case DriveDistance, CollectCoins, DriveToDistance
 }
 
-struct Quest {
+struct Quest: Codable {
     var questType: QuestType = QuestType.DriveDistance
     var progress: Int = 0
     var valueNeeded: Int = 0
@@ -103,27 +103,61 @@ struct Quest {
         
         return ""
     }
+    
+    func questCompleted() -> Bool {
+        return (progress == valueNeeded)
+    }
 }
 
-struct QuestGenerator {
+struct QuestManager {
     static func generateQuest() -> Quest{
 //        let questType = QuestType.allCases[Int.random(in: 0...QuestType.allCases.count - 1)]
         
         let quests = [
-            Quest(type: QuestType.DriveDistance, value: 500, reward: 20),
-            Quest(type: QuestType.DriveDistance, value: 1300, reward: 100),
-            Quest(type: QuestType.DriveDistance, value: 2000, reward: 150),
+            Quest(type: QuestType.DriveDistance, value: 50, reward: 20),
+            Quest(type: QuestType.DriveDistance, value: 130, reward: 100),
+            Quest(type: QuestType.DriveDistance, value: 200, reward: 180),
+            Quest(type: QuestType.DriveDistance, value: 300, reward: 290),
+            Quest(type: QuestType.DriveDistance, value: 400, reward: 380),
+            Quest(type: QuestType.DriveDistance, value: 500, reward: 450),
             
-            Quest(type: QuestType.CollectCoins, value: 400, reward: 30),
-            Quest(type: QuestType.CollectCoins, value: 500, reward: 80),
-            Quest(type: QuestType.CollectCoins, value: 800, reward: 100),
-            Quest(type: QuestType.CollectCoins, value: 1000, reward: 200),
+            Quest(type: QuestType.CollectCoins, value: 40, reward: 50),
+            Quest(type: QuestType.CollectCoins, value: 50, reward: 60),
+            Quest(type: QuestType.CollectCoins, value: 80, reward: 110),
+            Quest(type: QuestType.CollectCoins, value: 100, reward: 160),
             
-            Quest(type: QuestType.DriveToDistance, value: 2500, reward: 200),
-            Quest(type: QuestType.DriveToDistance, value: 5000, reward: 600)
+            Quest(type: QuestType.DriveToDistance, value: 250, reward: 200),
+            Quest(type: QuestType.DriveToDistance, value: 380, reward: 350),
+            Quest(type: QuestType.DriveToDistance, value: 500, reward: 600)
         ]
         
         return quests[Int.random(in: 0...quests.count - 1)]
+    }
+    
+    static func updateQuests(type: QuestType, increase: Bool, value: Int, quests: [Quest]) -> [Quest] {
+        var newQuests = quests
+        
+        for i in (0...newQuests.count - 1) {
+            if(newQuests[i].questType == type) {
+                
+                if(increase) {
+                    if(newQuests[i].progress + value > newQuests[i].valueNeeded) {
+                        newQuests[i].progress = newQuests[i].valueNeeded
+                    }
+                    else {
+                        newQuests[i].progress += value
+                    }
+                }
+                else {
+                    if(value >= newQuests[i].valueNeeded) {
+                        newQuests[i].progress = newQuests[i].valueNeeded
+                    }
+                }
+            }
+        }
+        
+        
+        return newQuests
     }
 }
 
@@ -176,9 +210,9 @@ struct ContentView: View {
     @State private var startRan = false
     
     @State private var quests: [Quest] = [
-        QuestGenerator.generateQuest(),
-        QuestGenerator.generateQuest(),
-        QuestGenerator.generateQuest()
+        QuestManager.generateQuest(),
+        QuestManager.generateQuest(),
+        QuestManager.generateQuest()
     ]
     
     //if closed, opens the popup. Otherwise, close the popup
@@ -232,6 +266,9 @@ struct ContentView: View {
             bestDistance = Int(distanceTraveled)
         }
         
+        quests = QuestManager.updateQuests(type: QuestType.DriveDistance, increase: true, value: Int(distanceTraveled), quests: quests)
+        quests = QuestManager.updateQuests(type: QuestType.DriveToDistance, increase: false, value: Int(distanceTraveled), quests: quests)
+        
         coinAmount += Int(distanceTraveled / 10)
         saveData()
     }
@@ -249,6 +286,16 @@ struct ContentView: View {
     func saveData() {
         UserDefaults.standard.set(coinAmount, forKey: "coinAmount")
         UserDefaults.standard.set(bestDistance, forKey: "bestDistance")
+        
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(quests)
+            
+            UserDefaults.standard.set(quests, forKey: "quests")
+        }
+        catch {
+            print("Unable to encode quests array to JSON")
+        }
     }
     
     func loadData() {
@@ -258,13 +305,29 @@ struct ContentView: View {
         if(UserDefaults.standard.object(forKey: "bestDistance") != nil) {
             bestDistance = UserDefaults.standard.integer(forKey: "bestDistance")
         }
+        if(UserDefaults.standard.data(forKey: "quests") != nil) {
+            
+            do {
+                let decoder = JSONDecoder()
+                quests = try decoder.decode([Quest].self, from: UserDefaults.standard.data(forKey: "quests"))
+            }
+            catch {
+                print("Unable to decode quests array to JSON")
+            }
+        }
     }
     
     func wipeData() {
         UserDefaults.standard.removeObject(forKey: "coinAmount")
         UserDefaults.standard.removeObject(forKey: "bestDistance")
+        UserDefaults.standard.removeObject(forKey: "quests")
         coinAmount = 100
         bestDistance = 0
+        quests = [
+            QuestManager.generateQuest(),
+            QuestManager.generateQuest(),
+            QuestManager.generateQuest()
+        ]
     }
 
     //code that runs once after the first render
@@ -345,12 +408,15 @@ struct ContentView: View {
                                         .foregroundColor(Color.gray)
                                     Spacer()
                                     Button() {
-                                        
+                                        if(quests[i].questCompleted()) {
+                                            coinAmount += quests[i].reward
+                                            quests[i] = QuestManager.generateQuest() //generate a new quest
+                                        }
                                     } label: {
                                         HStack {
                                             Text(String(quests[i].reward))
                                                 .font(.custom("ChalkboardSE-Bold", size: 20))
-                                                .foregroundColor(Color.red)
+                                                .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
                                                 .padding(1)
                                             Image("Coin")
                                                 .resizable()
@@ -364,9 +430,9 @@ struct ContentView: View {
                                     .cornerRadius(5)
                                 }
                                 
-                                Text(String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
+                                Text(quests[i].questCompleted() ? "Quest Complete" : String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
                                     .font(.custom("ChalkboardSE-Bold", size: 18))
-                                    .foregroundColor(Color.red)
+                                    .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
                                 
                             }.padding(8)
                             
