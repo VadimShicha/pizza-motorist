@@ -74,11 +74,13 @@ struct CarElement: Hashable {
     }
 }
 
-enum QuestType: CaseIterable {
-    case DriveDistance, CollectCoins, DriveToDistance
+enum QuestType: Int {
+    case DriveDistance = 0
+     case CollectCoins = 1
+     case DriveToDistance = 2
 }
 
-struct Quest: Codable {
+struct Quest {
     var questType: QuestType = QuestType.DriveDistance
     var progress: Int = 0
     var valueNeeded: Int = 0
@@ -202,6 +204,7 @@ struct ContentView: View {
     @State private var currentCarLane: [Int] = [2, -1]
     @State private var distanceTraveled: CGFloat = 0.0
     @State private var bestDistance: Int = 0
+    @State private var totalQuestsComplete: Int = 0
     
     @State private var gameRunning: Bool = true
     
@@ -286,15 +289,15 @@ struct ContentView: View {
     func saveData() {
         UserDefaults.standard.set(coinAmount, forKey: "coinAmount")
         UserDefaults.standard.set(bestDistance, forKey: "bestDistance")
+        UserDefaults.standard.set(totalQuestsComplete, forKey: "totalQuestsComplete")
         
-        do {
-            let encoder = JSONEncoder()
-            let data = try encoder.encode(quests)
+        for i in 0...quests.count - 1 {
+            let questKey = "quest" + String(i)
             
-            UserDefaults.standard.set(quests, forKey: "quests")
-        }
-        catch {
-            print("Unable to encode quests array to JSON")
+            UserDefaults.standard.set(quests[i].progress, forKey: questKey + "_progress")
+            UserDefaults.standard.set(quests[i].valueNeeded, forKey: questKey + "_valueNeeded")
+            UserDefaults.standard.set(quests[i].reward, forKey: questKey + "_reward")
+            UserDefaults.standard.set(quests[i].questType.rawValue, forKey: questKey + "_questType")
         }
     }
     
@@ -305,14 +308,34 @@ struct ContentView: View {
         if(UserDefaults.standard.object(forKey: "bestDistance") != nil) {
             bestDistance = UserDefaults.standard.integer(forKey: "bestDistance")
         }
-        if(UserDefaults.standard.data(forKey: "quests") != nil) {
+        if(UserDefaults.standard.object(forKey: "totalQuestsComplete") != nil) {
+            totalQuestsComplete = UserDefaults.standard.integer(forKey: "totalQuestsComplete")
+        }
+        if(UserDefaults.standard.object(forKey: "quest0_progress") != nil) {
             
-            do {
-                let decoder = JSONDecoder()
-                quests = try decoder.decode([Quest].self, from: UserDefaults.standard.data(forKey: "quests"))
-            }
-            catch {
-                print("Unable to decode quests array to JSON")
+            quests = []
+            
+            for i in 0...2 {
+                let questKey = "quest" + String(i)
+                
+                let questType: QuestType? = QuestType(rawValue: UserDefaults.standard.integer(forKey: questKey + "_questType"))
+                
+                if(questType == nil) {
+                    print("Quest " + String(i) + " is nil. Generating new quest")
+                    quests.append(QuestManager.generateQuest())
+                }
+                else {
+                    var newQuest = Quest(
+                        type: questType!,
+                        value: UserDefaults.standard.integer(forKey: questKey + "_valueNeeded"),
+                        reward: UserDefaults.standard.integer(forKey: questKey + "_reward")
+                    )
+                    
+                    newQuest.progress = UserDefaults.standard.integer(forKey: questKey + "_progress")
+                    
+                    quests.append(newQuest)
+                }
+                
             }
         }
     }
@@ -320,9 +343,21 @@ struct ContentView: View {
     func wipeData() {
         UserDefaults.standard.removeObject(forKey: "coinAmount")
         UserDefaults.standard.removeObject(forKey: "bestDistance")
+        UserDefaults.standard.removeObject(forKey: "totalQuestsComplete")
         UserDefaults.standard.removeObject(forKey: "quests")
+        
+        for i in 0...quests.count - 1 {
+            let questKey = "quest" + String(i)
+            
+            UserDefaults.standard.removeObject(forKey: questKey + "_progress")
+            UserDefaults.standard.removeObject(forKey: questKey + "_valueNeeded")
+            UserDefaults.standard.removeObject(forKey: questKey + "_reward")
+            UserDefaults.standard.removeObject(forKey: questKey + "_questType")
+        }
+        
         coinAmount = 100
         bestDistance = 0
+        totalQuestsComplete = 0
         quests = [
             QuestManager.generateQuest(),
             QuestManager.generateQuest(),
@@ -333,6 +368,7 @@ struct ContentView: View {
     //code that runs once after the first render
     func startLogic() {
         print("Start")
+        wipeData()
         loadData()
     }
     
@@ -405,12 +441,37 @@ struct ContentView: View {
                                 HStack {
                                     Text(quests[i].getQuestTitle())
                                         .font(.custom("ChalkboardSE-Bold", size: 20))
-                                        .foregroundColor(Color.gray)
+                                        .foregroundColor(Color.black)
+                                    Spacer()
+                                    //button
+                                }
+                                
+                                HStack {
+                                    Button() {
+                                        quests[i] = QuestManager.generateQuest() //generate a new quest
+                                        saveData()
+                                    } label: {
+                                        Image("Trash")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 25, height: 25)
+                                    }
+                                    .padding(3)
+                                    .background(Color.brown.opacity(0.7))
+                                    .cornerRadius(5)
+                                    
+                                    Text(quests[i].questCompleted() ? "Quest Complete" : String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
+                                        .font(.custom("ChalkboardSE-Bold", size: 18))
+                                        .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
+                                    
+                                        .padding(.leading, 20)
                                     Spacer()
                                     Button() {
                                         if(quests[i].questCompleted()) {
+                                            totalQuestsComplete += 1
                                             coinAmount += quests[i].reward
                                             quests[i] = QuestManager.generateQuest() //generate a new quest
+                                            saveData()
                                         }
                                     } label: {
                                         HStack {
@@ -426,15 +487,15 @@ struct ContentView: View {
                                         
                                     }
                                     .padding(3)
-                                    .background(Color.brown)
+                                    .background(Color.brown.opacity(0.7))
                                     .cornerRadius(5)
                                 }
                                 
-                                Text(quests[i].questCompleted() ? "Quest Complete" : String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
-                                    .font(.custom("ChalkboardSE-Bold", size: 18))
-                                    .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
                                 
-                            }.padding(8)
+                            }.padding(4)
+                                .background(Color.brown.opacity(0.1))
+                                .cornerRadius(5)
+                                .padding(4)
                             
                         }
                     }
@@ -448,16 +509,55 @@ struct ContentView: View {
                     VStack {
                         Text("Shop")
                             .font(.custom("ChalkboardSE-Bold", size: 35))
-
-                        Button() {
-                            
-                        } label: {
-                            Image(systemName: "cart.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 66, height: 66)
-                                .foregroundColor(Color.gray)
+                        
+                        ScrollView {
+                            VStack {
+                                ForEach(0...6, id: \.self) { i in
+                                    VStack {
+                                        HStack {
+                                            Spacer()
+                                            Text("Blue Car")
+                                                .font(.custom("ChalkboardSE-Bold", size: 23))
+                                            Spacer()
+                                        }
+                                        
+                                        Image("BlueCar")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 66, height: 66)
+                                        
+                                        HStack {
+                                            Spacer()
+                                            Button() {
+                                                
+                                            } label: {
+                                                HStack {
+                                                    Text(String(i * 100))
+                                                        .font(.custom("ChalkboardSE-Bold", size: 17))
+                                                        .foregroundColor(Color.red)
+                                                        .padding(1)
+                                                    Image("Coin")
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 22, height: 22)
+                                                }
+                                                
+                                            }
+                                            .padding(3)
+                                            .background(Color.brown.opacity(0.7))
+                                            .cornerRadius(5)
+                                            Spacer()
+                                        }
+                                    }
+                                    .padding(4)
+                                    .background(Color.brown.opacity(0.1))
+                                    .cornerRadius(5)
+                                    .padding(4)
+                                }
+                            }
                         }
+                        .frame(height: 400)
+                        
                         
                         
                     }
@@ -478,6 +578,14 @@ struct ContentView: View {
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                             Spacer()
                             Text(String(bestDistance) + "ft")
+                                .font(.custom("ChalkboardSE-Bold", size: 20))
+                        }.padding(8)
+                        
+                        HStack {
+                            Text("Quests complete:")
+                                .font(.custom("ChalkboardSE-Bold", size: 20))
+                            Spacer()
+                            Text(String(totalQuestsComplete))
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                         }.padding(8)
                         
