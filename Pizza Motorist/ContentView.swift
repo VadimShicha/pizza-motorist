@@ -163,6 +163,18 @@ struct QuestManager {
     }
 }
 
+struct GarageCar {
+    var carTitle: String = "Blue Car"
+    var imageName: String = "BlueCar"
+    var cost: Int = 1000
+    
+    init(title: String, name: String, price: Int) {
+        carTitle = title
+        imageName = name
+        cost = price
+    }
+}
+
 struct ContentView: View {
     
     enum WindowType {
@@ -170,7 +182,7 @@ struct ContentView: View {
     }
     
     enum PopupType {
-        case None, Quest, Shop, Stats, Settings, GameOver, GamePaused
+        case None, Quest, Shop, Stats, Settings, CarSelect, GameOver, GamePaused
     }
     
     @State private var coinAmount: Int = 100
@@ -216,6 +228,11 @@ struct ContentView: View {
         QuestManager.generateQuest(),
         QuestManager.generateQuest(),
         QuestManager.generateQuest()
+    ]
+    
+    let shopCars: [GarageCar] = [
+        GarageCar(title: "Blue Car Splat", name: "BlueCarSplat", price: 800),
+        GarageCar(title: "Red Car Splat", name: "BlueCarSplat", price: 1800)
     ]
     
     //if closed, opens the popup. Otherwise, close the popup
@@ -401,7 +418,7 @@ struct ContentView: View {
                                 .rotationEffect(.degrees(325))
                                 .shadow(color: Color(red: 0.3, green: 0.3, blue: 0.3), radius: 3, x: 0, y: 20)
                             Button() {
-                                
+                                currentPopupOpen = PopupType.CarSelect
                             } label: {
                                 Text("Change Car")
                                     .font(.custom("ChalkboardSE-Bold", size: 15))
@@ -414,9 +431,6 @@ struct ContentView: View {
                     
                     
                     Spacer()
-//                    HStack {
-//                        Spacer()
-//                    }
                     
                     Text("Tap to play!")
                         .font(.custom("ChalkboardSE-Bold", size: 24))
@@ -424,12 +438,15 @@ struct ContentView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    /* when the VStack is tapped (not a button on the stack),
-                    start the game */
-                    startGame()
+                    //if a popup isn't open and the VStack is tapped (not a button on the stack), start the game
+                    if(currentPopupOpen == PopupType.None) {
+                        startGame()
+                    }
+                    //otherwise, close the popup
+                    else {
+                        currentPopupOpen = PopupType.None
+                    }
                 }
-                
-                
                 
                 if(currentPopupOpen == PopupType.Quest) {
                     VStack {
@@ -512,16 +529,16 @@ struct ContentView: View {
                         
                         ScrollView {
                             VStack {
-                                ForEach(0...6, id: \.self) { i in
+                                ForEach(0...(shopCars.count - 1), id: \.self) { i in
                                     VStack {
                                         HStack {
                                             Spacer()
-                                            Text("Blue Car")
+                                            Text(shopCars[i].carTitle)
                                                 .font(.custom("ChalkboardSE-Bold", size: 23))
                                             Spacer()
                                         }
                                         
-                                        Image("BlueCar")
+                                        Image(shopCars[i].imageName)
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: 66, height: 66)
@@ -532,9 +549,9 @@ struct ContentView: View {
                                                 
                                             } label: {
                                                 HStack {
-                                                    Text(String(i * 100))
+                                                    Text(String(shopCars[i].cost))
                                                         .font(.custom("ChalkboardSE-Bold", size: 17))
-                                                        .foregroundColor(Color.red)
+                                                        .foregroundColor((coinAmount < shopCars[i].cost) ? Color.red : Color.black)
                                                         .padding(1)
                                                     Image("Coin")
                                                         .resizable()
@@ -646,6 +663,65 @@ struct ContentView: View {
                     .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
                     .transition(.move(edge: .trailing))
                     .background(Color.gray)
+                    .padding(.trailing, 80)
+                    .padding(.leading, 3)
+                }
+                else if(currentPopupOpen == PopupType.CarSelect) {
+                    VStack {
+                        Text("Garage")
+                            .font(.custom("ChalkboardSE-Bold", size: 35))
+                        
+                        ScrollView {
+                            VStack {
+                                ForEach(0...9, id: \.self) { i in
+                                    HStack {
+                                        ForEach(0...1, id: \.self) { j in
+                                            VStack {
+                                                HStack {
+                                                    Spacer()
+                                                    Text("Blue Car")
+                                                        .font(.custom("ChalkboardSE-Bold", size: 23))
+                                                    Spacer()
+                                                }
+                                                
+                                                Image("BlueCar")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 66, height: 66)
+                                                
+                                                HStack {
+                                                    Spacer()
+                                                    Button() {
+                                                        
+                                                    } label: {
+                                                        Text("Equip")
+                                                            .font(.custom("ChalkboardSE-Bold", size: 17))
+                                                            .foregroundColor(Color.black)
+                                                            .padding(1)
+                                                    }
+                                                    .padding(3)
+                                                    .background(Color.brown.opacity(0.7))
+                                                    .cornerRadius(5)
+                                                    Spacer()
+                                                }
+                                            }
+                                            .padding(4)
+                                            .background(Color.cyan.opacity(0.4))
+                                            .cornerRadius(5)
+                                            .padding(4)
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                        }
+                        .frame(height: 400)
+                        
+                    }
+                    .frame(maxWidth: UIScreen.main.bounds.size.width - 80)
+                    .transition(.move(edge: .trailing))
+                    .padding(.bottom, 40)
+                    .background(Color.mint)
                     .padding(.trailing, 80)
                     .padding(.leading, 3)
                 }
