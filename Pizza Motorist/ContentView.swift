@@ -167,11 +167,17 @@ struct GarageCar {
     var carTitle: String = "Blue Car"
     var imageName: String = "BlueCar"
     var cost: Int = 1000
+    var owned: Bool = false
     
-    init(title: String, name: String, price: Int) {
+    init(title: String, name: String, price: Int = 0) {
         carTitle = title
         imageName = name
         cost = price
+        owned = false
+    }
+    
+    mutating func setOwned(value: Bool) {
+        owned = value
     }
 }
 
@@ -230,9 +236,13 @@ struct ContentView: View {
         QuestManager.generateQuest()
     ]
     
-    let shopCars: [GarageCar] = [
-        GarageCar(title: "Blue Car Splat", name: "BlueCarSplat", price: 800),
-        GarageCar(title: "Red Car Splat", name: "BlueCarSplat", price: 1800)
+    @State private var shopCars: [GarageCar] = [
+        GarageCar(title: "Blue Car Splat", name: "BlueCarSplat", price: 80),
+        GarageCar(title: "Red Car Splat", name: "BlueCarSplat", price: 100)
+    ]
+    
+    @State private var ownedCars: [GarageCar] = [
+        GarageCar(title: "Default Car", name: "BlueCar")
     ]
     
     //if closed, opens the popup. Otherwise, close the popup
@@ -529,7 +539,7 @@ struct ContentView: View {
                         
                         ScrollView {
                             VStack {
-                                ForEach(0...(shopCars.count - 1), id: \.self) { i in
+                                ForEach(0...1, id: \.self) { i in
                                     VStack {
                                         HStack {
                                             Spacer()
@@ -546,17 +556,29 @@ struct ContentView: View {
                                         HStack {
                                             Spacer()
                                             Button() {
-                                                
+                                                if(coinAmount >= shopCars[i].cost) {
+                                                    shopCars[i].owned = true
+                                                    coinAmount -= shopCars[i].cost
+                                                    ownedCars.append(GarageCar(title: shopCars[i].carTitle, name: shopCars[i].imageName))
+                                                }
                                             } label: {
                                                 HStack {
-                                                    Text(String(shopCars[i].cost))
-                                                        .font(.custom("ChalkboardSE-Bold", size: 17))
-                                                        .foregroundColor((coinAmount < shopCars[i].cost) ? Color.red : Color.black)
-                                                        .padding(1)
-                                                    Image("Coin")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 22, height: 22)
+                                                    if(shopCars[i].owned) {
+                                                        Text("Bought")
+                                                            .font(.custom("ChalkboardSE-Bold", size: 17))
+                                                            .foregroundColor(Color.black)
+                                                            .padding(1)
+                                                    }
+                                                    else {
+                                                        Text(String(shopCars[i].cost))
+                                                            .font(.custom("ChalkboardSE-Bold", size: 17))
+                                                            .foregroundColor((coinAmount < shopCars[i].cost) ? Color.red : Color.black)
+                                                            .padding(1)
+                                                        Image("Coin")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(width: 22, height: 22)
+                                                    }
                                                 }
                                                 
                                             }
@@ -673,37 +695,45 @@ struct ContentView: View {
                         
                         ScrollView {
                             VStack {
-                                ForEach(0...9, id: \.self) { i in
+                                ForEach(0..<1, id: \.self) { i in
                                     HStack {
                                         ForEach(0...1, id: \.self) { j in
                                             VStack {
-                                                HStack {
-                                                    Spacer()
-                                                    Text("Blue Car")
-                                                        .font(.custom("ChalkboardSE-Bold", size: 23))
-                                                    Spacer()
-                                                }
+//                                                if((i * 2) + j < ownedCars.count) {
+//                                                    HStack {
+//                                                        Spacer()
+//                                                        Text(ownedCars[i].carTitle)
+//                                                            .font(.custom("ChalkboardSE-Bold", size: 23))
+//                                                        Spacer()
+//                                                    }
+//                                                    
+//                                                    Image(ownedCars[i].imageName)
+//                                                        .resizable()
+//                                                        .scaledToFit()
+//                                                        .frame(width: 66, height: 66)
+//                                                    
+//                                                    HStack {
+//                                                        Spacer()
+//                                                        Button() {
+//                                                            
+//                                                        } label: {
+//                                                            Text("Equip")
+//                                                                .font(.custom("ChalkboardSE-Bold", size: 17))
+//                                                                .foregroundColor(Color.black)
+//                                                                .padding(1)
+//                                                        }
+//                                                        .padding(3)
+//                                                        .background(Color.brown.opacity(0.7))
+//                                                        .cornerRadius(5)
+//                                                        Spacer()
+//                                                    }
+//                                                }
+//                                                else {
+//                                                    HStack {
+//                                                        Spacer()
+//                                                    }
+//                                                }
                                                 
-                                                Image("BlueCar")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 66, height: 66)
-                                                
-                                                HStack {
-                                                    Spacer()
-                                                    Button() {
-                                                        
-                                                    } label: {
-                                                        Text("Equip")
-                                                            .font(.custom("ChalkboardSE-Bold", size: 17))
-                                                            .foregroundColor(Color.black)
-                                                            .padding(1)
-                                                    }
-                                                    .padding(3)
-                                                    .background(Color.brown.opacity(0.7))
-                                                    .cornerRadius(5)
-                                                    Spacer()
-                                                }
                                             }
                                             .padding(4)
                                             .background(Color.cyan.opacity(0.4))
