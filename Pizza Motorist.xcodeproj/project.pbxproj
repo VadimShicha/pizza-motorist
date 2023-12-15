@@ -14,6 +14,10 @@
 		9A33F67A2B12D755002F1379 /* Pizza_MotoristTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F6792B12D755002F1379 /* Pizza_MotoristTests.swift */; };
 		9A33F6842B12D755002F1379 /* Pizza_MotoristUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F6832B12D755002F1379 /* Pizza_MotoristUITests.swift */; };
 		9A33F6862B12D755002F1379 /* Pizza_MotoristUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A33F6852B12D755002F1379 /* Pizza_MotoristUITestsLaunchTests.swift */; };
+		9A3820B22B2C209A00A4440A /* Quests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A3820B12B2C209A00A4440A /* Quests.swift */; };
+		9A3820B42B2C225800A4440A /* CarElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A3820B32B2C225800A4440A /* CarElements.swift */; };
+		9A3820B62B2C257700A4440A /* MainGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A3820B52B2C257600A4440A /* MainGameView.swift */; };
+		9A3820B82B2C31DE00A4440A /* GlobalData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A3820B72B2C31DE00A4440A /* GlobalData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +48,10 @@
 		9A33F67F2B12D755002F1379 /* Pizza MotoristUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Pizza MotoristUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9A33F6832B12D755002F1379 /* Pizza_MotoristUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pizza_MotoristUITests.swift; sourceTree = "<group>"; };
 		9A33F6852B12D755002F1379 /* Pizza_MotoristUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pizza_MotoristUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		9A3820B12B2C209A00A4440A /* Quests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quests.swift; sourceTree = "<group>"; };
+		9A3820B32B2C225800A4440A /* CarElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarElements.swift; sourceTree = "<group>"; };
+		9A3820B52B2C257600A4440A /* MainGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainGameView.swift; sourceTree = "<group>"; };
+		9A3820B72B2C31DE00A4440A /* GlobalData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +106,10 @@
 				9A33F66A2B12D751002F1379 /* ContentView.swift */,
 				9A33F66C2B12D755002F1379 /* Assets.xcassets */,
 				9A33F66E2B12D755002F1379 /* Preview Content */,
+				9A3820B12B2C209A00A4440A /* Quests.swift */,
+				9A3820B32B2C225800A4440A /* CarElements.swift */,
+				9A3820B52B2C257600A4440A /* MainGameView.swift */,
+				9A3820B72B2C31DE00A4440A /* GlobalData.swift */,
 			);
 			path = "Pizza Motorist";
 			sourceTree = "<group>";
@@ -257,8 +269,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9A3820B82B2C31DE00A4440A /* GlobalData.swift in Sources */,
+				9A3820B22B2C209A00A4440A /* Quests.swift in Sources */,
 				9A33F66B2B12D751002F1379 /* ContentView.swift in Sources */,
 				9A33F6692B12D751002F1379 /* Pizza_MotoristApp.swift in Sources */,
+				9A3820B42B2C225800A4440A /* CarElements.swift in Sources */,
+				9A3820B62B2C257700A4440A /* MainGameView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

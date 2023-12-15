@@ -58,110 +58,6 @@ struct CarGenerator {
     }
 }
 
-enum CarElementType {
-    case None, Car
-}
-
-struct CarElement: Hashable {
-    var imageName = ""
-    var carType: CarElementType = CarElementType.None
-    var position: [CGFloat]
-    
-    init(eType: CarElementType = CarElementType.None, name: String) {
-        carType = eType
-        imageName = name
-        position = [0, 0]
-    }
-}
-
-enum QuestType: Int {
-    case DriveDistance = 0
-     case CollectCoins = 1
-     case DriveToDistance = 2
-}
-
-struct Quest {
-    var questType: QuestType = QuestType.DriveDistance
-    var progress: Int = 0
-    var valueNeeded: Int = 0
-    var reward: Int = 100
-    
-    init(type: QuestType, value: Int, reward: Int = 100) {
-        questType = type
-        valueNeeded = value
-        self.reward = reward
-    }
-    
-    func getQuestTitle() -> String {
-        if(questType == QuestType.DriveDistance) {
-            return "Drive for " + String(valueNeeded) + " feet"
-        }
-        else if(questType == QuestType.CollectCoins) {
-            return "Collect " + String(valueNeeded) + " coins"
-        }
-        else if(questType == QuestType.DriveToDistance) {
-            return "Drive " + String(valueNeeded) + " feet in one run"
-        }
-        
-        return ""
-    }
-    
-    func questCompleted() -> Bool {
-        return (progress == valueNeeded)
-    }
-}
-
-struct QuestManager {
-    static func generateQuest() -> Quest{
-//        let questType = QuestType.allCases[Int.random(in: 0...QuestType.allCases.count - 1)]
-        
-        let quests = [
-            Quest(type: QuestType.DriveDistance, value: 50, reward: 20),
-            Quest(type: QuestType.DriveDistance, value: 130, reward: 100),
-            Quest(type: QuestType.DriveDistance, value: 200, reward: 180),
-            Quest(type: QuestType.DriveDistance, value: 300, reward: 290),
-            Quest(type: QuestType.DriveDistance, value: 400, reward: 380),
-            Quest(type: QuestType.DriveDistance, value: 500, reward: 450),
-            
-            Quest(type: QuestType.CollectCoins, value: 40, reward: 50),
-            Quest(type: QuestType.CollectCoins, value: 50, reward: 60),
-            Quest(type: QuestType.CollectCoins, value: 80, reward: 110),
-            Quest(type: QuestType.CollectCoins, value: 100, reward: 160),
-            
-            Quest(type: QuestType.DriveToDistance, value: 250, reward: 200),
-            Quest(type: QuestType.DriveToDistance, value: 380, reward: 350),
-            Quest(type: QuestType.DriveToDistance, value: 500, reward: 600)
-        ]
-        
-        return quests[Int.random(in: 0...quests.count - 1)]
-    }
-    
-    static func updateQuests(type: QuestType, increase: Bool, value: Int, quests: [Quest]) -> [Quest] {
-        var newQuests = quests
-        
-        for i in (0...newQuests.count - 1) {
-            if(newQuests[i].questType == type) {
-                
-                if(increase) {
-                    if(newQuests[i].progress + value > newQuests[i].valueNeeded) {
-                        newQuests[i].progress = newQuests[i].valueNeeded
-                    }
-                    else {
-                        newQuests[i].progress += value
-                    }
-                }
-                else {
-                    if(value >= newQuests[i].valueNeeded) {
-                        newQuests[i].progress = newQuests[i].valueNeeded
-                    }
-                }
-            }
-        }
-        
-        
-        return newQuests
-    }
-}
 
 struct GarageCar {
     var carTitle: String = "Blue Car"
@@ -181,60 +77,62 @@ struct GarageCar {
     }
 }
 
+enum PopupType {
+    case None, Quest, Shop, Stats, Settings, CarSelect, GameOver, GamePaused
+}
+
+enum WindowType {
+    case Home, MainGame
+}
+
 struct ContentView: View {
+
+    //@State private var coinAmount: Int = 100
     
-    enum WindowType {
-        case Home, MainGame
-    }
+    //@State private var currentWindowOpen: WindowType = WindowType.Home
     
-    enum PopupType {
-        case None, Quest, Shop, Stats, Settings, CarSelect, GameOver, GamePaused
-    }
-    
-    @State private var coinAmount: Int = 100
-    
-    @State private var currentWindowOpen: WindowType = WindowType.Home
+    //@Binding private var currentPopupOpen: PopupType = PopupType.None
     @State private var currentPopupOpen: PopupType = PopupType.None
     
-    @State private var carElements = [[CarElement]](); //array of array with Cars
-    @State private var carPositionX: CGFloat = 0
-    @State private var carPositionY: CGFloat = 0
+//    @State private var carElements = [[CarElement]](); //array of array with Cars
+//    @State private var carPositionX: CGFloat = 0
+    //@State private var carPositionY: CGFloat = 0
     
-    @State private var fallingVar: CGFloat = 50
+//    @State private var fallingVar: CGFloat = 50
     
-    @State private var carGenerator: CarGenerator = CarGenerator()
+//    @State private var carGenerator: CarGenerator = CarGenerator()
     
     
-    let timer = Timer.publish(every: 0.003, tolerance: 0.0003, on: .main, in: .common).autoconnect()
+//    let timer = Timer.publish(every: 0.003, tolerance: 0.0003, on: .main, in: .common).autoconnect()
+//    
+//    let carWidth = 70.0 / 1.2
+//    let carHeight = 109.375 / 1.2
+//    
+//    let roadWidth = 70.0
+//    let roadHeight = 109.375
     
-    let carWidth = 70.0 / 1.2
-    let carHeight = 109.375 / 1.2
-    
-    let roadWidth = 70.0
-    let roadHeight = 109.375
-    
-    let carSpeed: CGFloat = 3
-    @State private var carSpeedMultiplier: CGFloat = 1
+//    let carSpeed: CGFloat = 3
+//    @State private var carSpeedMultiplier: CGFloat = 1
     
     let homeTabColor = Color(red: 128 / 255, green: 78 / 255, blue: 32 / 255)
     let homeTabColorSelected = Color(red: 115 / 255, green: 69 / 255, blue: 25 / 255)
     
-    @State private var currentCarLane: [Int] = [2, -1]
-    @State private var distanceTraveled: CGFloat = 0.0
-    @State private var bestDistance: Int = 0
+//    @State private var currentCarLane: [Int] = [2, -1]
+//    @State private var distanceTraveled: CGFloat = 0.0
+    //@State private var bestDistance: Int = 0
     @State private var totalQuestsComplete: Int = 0
     
-    @State private var gameRunning: Bool = true
+//    @State private var gameRunning: Bool = true
     
-    @State private var showMoveArea = false
+//    @State private var showMoveArea = false
     
     @State private var startRan = false
     
-    @State private var quests: [Quest] = [
-        QuestManager.generateQuest(),
-        QuestManager.generateQuest(),
-        QuestManager.generateQuest()
-    ]
+//    @State private var quests: [Quest] = [
+//        QuestManager.generateQuest(),
+//        QuestManager.generateQuest(),
+//        QuestManager.generateQuest()
+//    ]
     
     @State private var shopCars: [GarageCar] = [
         GarageCar(title: "Blue Car Splat", name: "BlueCarSplat", price: 80),
@@ -257,90 +155,93 @@ struct ContentView: View {
         }
     }
     
-    //sets up the cars arrays
-    func setupGame() {
-        for _ in 1...12 {
-            carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
-        }
-        
-        carPositionY = getScreenYWithYLane(yLane: 6)
-        
-        carElements[6][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
-        //print(-(((12*109.375) - 1000) / 2) + 6 * (109.375))
-        //print(-(((12 * carHeight) - UIScreen.main.bounds.size.height) / 2) + (6 * carHeight))
-        
-    }
+//    //sets up the cars arrays
+//    func setupGame() {
+//        for _ in 1...12 {
+//            carElements.append([CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar"),CarElement(name: "RedCar")])
+//        }
+//        
+//        carPositionY = getScreenYWithYLane(yLane: 6)
+//        
+//        carElements[6][0] = CarElement(eType: CarElementType.Car, name: "RedCar")
+//        //print(-(((12*109.375) - 1000) / 2) + 6 * (109.375))
+//        //print(-(((12 * carHeight) - UIScreen.main.bounds.size.height) / 2) + (6 * carHeight))
+//        
+//    }
 
     //changes the window while also setting up all the game elements
-    func startGame() {
-        currentWindowOpen = WindowType.MainGame
-        
-        carPositionX = 0
-        currentCarLane = [2, -1]
-        distanceTraveled = 0.0
-        
-        currentPopupOpen = PopupType.None
-        gameRunning = true
-        
-        carElements = [[CarElement]]()
-        setupGame()
-    }
+//    func startGame() {
+//        GlobalData.currentWindowOpen = WindowType.MainGame
+//        
+//        carPositionX = 0
+//        currentCarLane = [2, -1]
+//        distanceTraveled = 0.0
+//        
+//        currentPopupOpen = PopupType.None
+//        gameRunning = true
+//        
+//        carElements = [[CarElement]]()
+//        setupGame()
+//    }
     
-    func endGame() {
-        if(!gameRunning) {return} //sometimes this function will be called multiple times
-            
-        carSpeedMultiplier = 1
-        gameRunning = false
-        
-        if(Int(distanceTraveled) > bestDistance) {
-            bestDistance = Int(distanceTraveled)
-        }
-        
-        quests = QuestManager.updateQuests(type: QuestType.DriveDistance, increase: true, value: Int(distanceTraveled), quests: quests)
-        quests = QuestManager.updateQuests(type: QuestType.DriveToDistance, increase: false, value: Int(distanceTraveled), quests: quests)
-        
-        coinAmount += Int(distanceTraveled / 10)
-        saveData()
-    }
+//    func endGame() {
+//        if(!gameRunning) {return} //sometimes this function will be called multiple times
+//            
+//        carSpeedMultiplier = 1
+//        gameRunning = false
+//        
+//        if(Int(distanceTraveled) > bestDistance) {
+//            bestDistance = Int(distanceTraveled)
+//        }
+//        
+//        quests = QuestManager.updateQuests(type: QuestType.DriveDistance, increase: true, value: Int(distanceTraveled), quests: quests)
+//        quests = QuestManager.updateQuests(type: QuestType.DriveToDistance, increase: false, value: Int(distanceTraveled), quests: quests)
+//        
+//        coinAmount += Int(distanceTraveled / 10)
+//        saveData()
+//    }
     
-    func getScreenYWithYLane(yLane: Int) -> CGFloat {
-        
-        //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
-        
-        let firstLaneY = -(12 * roadHeight - UIScreen.main.bounds.size.height) / 2.0
-        let lane = firstLaneY + (Double(yLane) * roadHeight)
-                    
-        return lane + (roadHeight / 2) + fallingVar
-    }
+//    func getScreenYWithYLane(yLane: Int) -> CGFloat {
+//        
+//        //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
+//        
+//        let firstLaneY = -(12 * roadHeight - UIScreen.main.bounds.size.height) / 2.0
+//        let lane = firstLaneY + (Double(yLane) * roadHeight)
+//                    
+//        return lane + (roadHeight / 2) + fallingVar
+//    }
+    
+    let carWidth = 70.0 / 1.2
+    let carHeight = 109.375 / 1.2
     
     func saveData() {
-        UserDefaults.standard.set(coinAmount, forKey: "coinAmount")
-        UserDefaults.standard.set(bestDistance, forKey: "bestDistance")
+        UserDefaults.standard.set(GlobalData.coinAmount, forKey: "coinAmount")
+        UserDefaults.standard.set(GlobalData.bestDistance, forKey: "bestDistance")
         UserDefaults.standard.set(totalQuestsComplete, forKey: "totalQuestsComplete")
         
-        for i in 0...quests.count - 1 {
+        for i in 0...GlobalData.quests.count - 1 {
             let questKey = "quest" + String(i)
             
-            UserDefaults.standard.set(quests[i].progress, forKey: questKey + "_progress")
-            UserDefaults.standard.set(quests[i].valueNeeded, forKey: questKey + "_valueNeeded")
-            UserDefaults.standard.set(quests[i].reward, forKey: questKey + "_reward")
-            UserDefaults.standard.set(quests[i].questType.rawValue, forKey: questKey + "_questType")
+            UserDefaults.standard.set(GlobalData.quests[i].progress, forKey: questKey + "_progress")
+            UserDefaults.standard.set(GlobalData.quests[i].valueNeeded, forKey: questKey + "_valueNeeded")
+            UserDefaults.standard.set(GlobalData.quests[i].reward, forKey: questKey + "_reward")
+            UserDefaults.standard.set(GlobalData.quests[i].questType.rawValue, forKey: questKey + "_questType")
         }
     }
     
     func loadData() {
         if(UserDefaults.standard.object(forKey: "coinAmount") != nil) {
-            coinAmount = UserDefaults.standard.integer(forKey: "coinAmount")
+            GlobalData.coinAmount = UserDefaults.standard.integer(forKey: "coinAmount")
         }
         if(UserDefaults.standard.object(forKey: "bestDistance") != nil) {
-            bestDistance = UserDefaults.standard.integer(forKey: "bestDistance")
+            GlobalData.bestDistance = UserDefaults.standard.integer(forKey: "bestDistance")
         }
         if(UserDefaults.standard.object(forKey: "totalQuestsComplete") != nil) {
             totalQuestsComplete = UserDefaults.standard.integer(forKey: "totalQuestsComplete")
         }
         if(UserDefaults.standard.object(forKey: "quest0_progress") != nil) {
             
-            quests = []
+            GlobalData.quests = []
             
             for i in 0...2 {
                 let questKey = "quest" + String(i)
@@ -349,7 +250,7 @@ struct ContentView: View {
                 
                 if(questType == nil) {
                     print("Quest " + String(i) + " is nil. Generating new quest")
-                    quests.append(QuestManager.generateQuest())
+                    GlobalData.quests.append(QuestManager.generateQuest())
                 }
                 else {
                     var newQuest = Quest(
@@ -360,7 +261,7 @@ struct ContentView: View {
                     
                     newQuest.progress = UserDefaults.standard.integer(forKey: questKey + "_progress")
                     
-                    quests.append(newQuest)
+                    GlobalData.quests.append(newQuest)
                 }
                 
             }
@@ -373,7 +274,7 @@ struct ContentView: View {
         UserDefaults.standard.removeObject(forKey: "totalQuestsComplete")
         UserDefaults.standard.removeObject(forKey: "quests")
         
-        for i in 0...quests.count - 1 {
+        for i in 0...GlobalData.quests.count - 1 {
             let questKey = "quest" + String(i)
             
             UserDefaults.standard.removeObject(forKey: questKey + "_progress")
@@ -382,10 +283,10 @@ struct ContentView: View {
             UserDefaults.standard.removeObject(forKey: questKey + "_questType")
         }
         
-        coinAmount = 100
-        bestDistance = 0
+        GlobalData.coinAmount = 100
+        GlobalData.bestDistance = 0
         totalQuestsComplete = 0
-        quests = [
+        GlobalData.quests = [
             QuestManager.generateQuest(),
             QuestManager.generateQuest(),
             QuestManager.generateQuest()
@@ -400,7 +301,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        if(currentWindowOpen == WindowType.Home) {
+        if(GlobalData.currentWindowOpen == WindowType.Home) {
             ZStack {
                 
                 VStack(spacing: 0) {
@@ -412,7 +313,7 @@ struct ContentView: View {
                         Image("Coin")
                             .resizable()
                             .frame(width: 40, height: 40)
-                        Text(String(coinAmount))
+                        Text(String(GlobalData.coinAmount))
                             .font(.custom("ChalkboardSE-Bold", size: 40))
                             .foregroundColor(Color.yellow)
                             .padding(.bottom, 5)
@@ -450,7 +351,7 @@ struct ContentView: View {
                 .onTapGesture {
                     //if a popup isn't open and the VStack is tapped (not a button on the stack), start the game
                     if(currentPopupOpen == PopupType.None) {
-                        startGame()
+                        ///////////////startGame()
                     }
                     //otherwise, close the popup
                     else {
@@ -466,7 +367,7 @@ struct ContentView: View {
                         ForEach(0...2, id: \.self) { i in
                             VStack {
                                 HStack {
-                                    Text(quests[i].getQuestTitle())
+                                    Text(GlobalData.quests[i].getQuestTitle())
                                         .font(.custom("ChalkboardSE-Bold", size: 20))
                                         .foregroundColor(Color.black)
                                     Spacer()
@@ -475,7 +376,7 @@ struct ContentView: View {
                                 
                                 HStack {
                                     Button() {
-                                        quests[i] = QuestManager.generateQuest() //generate a new quest
+                                        GlobalData.quests[i] = QuestManager.generateQuest() //generate a new quest
                                         saveData()
                                     } label: {
                                         Image("Trash")
@@ -487,24 +388,24 @@ struct ContentView: View {
                                     .background(Color.brown.opacity(0.7))
                                     .cornerRadius(5)
                                     
-                                    Text(quests[i].questCompleted() ? "Quest Complete" : String(quests[i].progress) + " / " + String(quests[i].valueNeeded))
+                                    Text(GlobalData.quests[i].questCompleted() ? "Quest Complete" : String(GlobalData.quests[i].progress) + " / " + String(GlobalData.quests[i].valueNeeded))
                                         .font(.custom("ChalkboardSE-Bold", size: 18))
-                                        .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
+                                        .foregroundColor(GlobalData.quests[i].questCompleted() ? Color.green : Color.red)
                                     
                                         .padding(.leading, 20)
                                     Spacer()
                                     Button() {
-                                        if(quests[i].questCompleted()) {
+                                        if(GlobalData.quests[i].questCompleted()) {
                                             totalQuestsComplete += 1
-                                            coinAmount += quests[i].reward
-                                            quests[i] = QuestManager.generateQuest() //generate a new quest
+                                            GlobalData.coinAmount += GlobalData.quests[i].reward
+                                            GlobalData.quests[i] = QuestManager.generateQuest() //generate a new quest
                                             saveData()
                                         }
                                     } label: {
                                         HStack {
-                                            Text(String(quests[i].reward))
+                                            Text(String(GlobalData.quests[i].reward))
                                                 .font(.custom("ChalkboardSE-Bold", size: 20))
-                                                .foregroundColor(quests[i].questCompleted() ? Color.green : Color.red)
+                                                .foregroundColor(GlobalData.quests[i].questCompleted() ? Color.green : Color.red)
                                                 .padding(1)
                                             Image("Coin")
                                                 .resizable()
@@ -556,9 +457,9 @@ struct ContentView: View {
                                         HStack {
                                             Spacer()
                                             Button() {
-                                                if(coinAmount >= shopCars[i].cost) {
+                                                if(GlobalData.coinAmount >= shopCars[i].cost) {
                                                     shopCars[i].owned = true
-                                                    coinAmount -= shopCars[i].cost
+                                                    GlobalData.coinAmount -= shopCars[i].cost
                                                     ownedCars.append(GarageCar(title: shopCars[i].carTitle, name: shopCars[i].imageName))
                                                 }
                                             } label: {
@@ -572,7 +473,7 @@ struct ContentView: View {
                                                     else {
                                                         Text(String(shopCars[i].cost))
                                                             .font(.custom("ChalkboardSE-Bold", size: 17))
-                                                            .foregroundColor((coinAmount < shopCars[i].cost) ? Color.red : Color.black)
+                                                            .foregroundColor((GlobalData.coinAmount < shopCars[i].cost) ? Color.red : Color.black)
                                                             .padding(1)
                                                         Image("Coin")
                                                             .resizable()
@@ -616,7 +517,7 @@ struct ContentView: View {
                             Text("Best distance:")
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                             Spacer()
-                            Text(String(bestDistance) + "ft")
+                            Text(String(GlobalData.bestDistance) + "ft")
                                 .font(.custom("ChalkboardSE-Bold", size: 20))
                         }.padding(8)
                         
@@ -652,8 +553,8 @@ struct ContentView: View {
                         }
                         
                         HStack {
-                            Toggle("Show move area", isOn: $showMoveArea)
-                                .font(.custom("ChalkboardSE-Bold", size: 25))
+//                            Toggle("Show move area", isOn: $showMoveArea)
+//                                .font(.custom("ChalkboardSE-Bold", size: 25))
                         }
                         .padding(8)
                         
@@ -824,250 +725,251 @@ struct ContentView: View {
                 loadData()
             }
         }
-        else if(currentWindowOpen == WindowType.MainGame) {
+        else if(GlobalData.currentWindowOpen == WindowType.MainGame) {
 
+            MainGameView(currentPopupOpen: $currentPopupOpen)
             //let _ = print(-((12 * carHeight) - UIScreen.main.bounds.size.height))
-            ZStack {
-                
-                //Text("BLAH").position(x: 0, y: getScreenYWithYLane(yLane: 6))
-                
-                VStack(spacing: 0) {
-                    ForEach(carElements, id: \.self) { carArray in
-                        HStack(spacing: 0) {
-                            ForEach(carArray, id: \.self) { car in
-                                if(car.carType == CarElementType.Car) {
-                                    
-                                    ZStack {
-                                        Image("Road")
-                                            .resizable()
-                                            .frame(width: roadWidth, height: roadHeight)
-                                        Image(car.imageName)
-                                            .resizable()
-                                            .frame(width: carWidth, height: carHeight)
-                                    }
-                                }
-                                else {
-                                    Image("Road")
-                                        .resizable()
-                                        .frame(width: roadWidth, height: roadHeight)
-                                }
-                            }
-                        }
-                    }
-                    Spacer()
-                }
-                .background(Color(red: 0.6, green: 0.6, blue: 0.6))
-                .position(x: UIScreen.main.bounds.size.width / 2,
-                          y: UIScreen.main.bounds.size.height / 2 + CGFloat(fallingVar)) // + carHeight
-                .contentShape(Rectangle())
-                
-                VStack {
-                    Spacer()
-                    HStack {
-                        Image("BlueCar")
-                            .resizable()
-                            .position(x: carPositionX + carWidth / 2)
-                            .frame(width: carWidth / 1.15, height: carHeight / 1.15)
-                    }.padding(25)
-                }
-                .onReceive(timer) { time in
-                    if(gameRunning) {
-                        fallingVar += ((carSpeed * carSpeedMultiplier) / 2)
-                        distanceTraveled += (0.1 * ((carSpeed * carSpeedMultiplier) / 3))
-                        
-                        if(distanceTraveled >= 1000) {
-                            carSpeedMultiplier = 1.5
-                        }
-                        else if(distanceTraveled >= 800) {
-                            carSpeedMultiplier = 1.4
-                        }
-                        else if(distanceTraveled >= 650) {
-                            carSpeedMultiplier = 1.3
-                        }
-                        else if(distanceTraveled >= 500) {
-                            carSpeedMultiplier = 1.2
-                        }
-                        else if(distanceTraveled >= 350) {
-                            carSpeedMultiplier = 1.15
-                        }
-                        else if(distanceTraveled >= 200) {
-                            carSpeedMultiplier = 1.1
-                        }
-                        else if(distanceTraveled >= 100) {
-                            carSpeedMultiplier = 1.05
-                        }
-                    }
-                    
-                    print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10))
-                    
-                    //detect car collisions
-                    for i in 0...4 {
-                        //if the player car is colliding with a car
-                        if((carElements[6][i].carType == CarElementType.Car ||
-                            carElements[7][i].carType == CarElementType.Car) &&
-                           (currentCarLane[0] == i || currentCarLane[1] == i)) {
-                            
-                            //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
-                            
-                            
-                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10) <= roadHeight) {
-                                endGame()
-                                currentPopupOpen = PopupType.GameOver
-                            }
-                        }
-                    }
-                    
-                    //loop the car back to top of array when it reaches the bottom
-                    if(fallingVar >= roadHeight + 0) {
-                        fallingVar = 0
-                        
-                        carElements.removeLast()
-                        carElements.insert(carGenerator.generateNextRow(), at: 0)
-                    }
-                }
-                
-                
-                
-                //the input area where you drag your finger to move
-                VStack {
-                    Spacer()
-                    HStack {}
-                        .frame(width: UIScreen.main.bounds.size.width,
-                               height: UIScreen.main.bounds.size.height / 3)
-                        .background(showMoveArea ? Color.black.opacity(0.05) : Color.black.opacity(0))
-                        .contentShape(Rectangle())
-                        .gesture(DragGesture()
-                            .onChanged { value in
-                                if(gameRunning) {
-                                    let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
-                                    
-                                    let laneNumber = (carPositionX / roadWidth) + 2
-                                    var roundedLaneNumber = Int(round(laneNumber))
-                                    
-                                    //make sure the current lane isn't out of bounds
-                                    if(roundedLaneNumber < 0) {
-                                        roundedLaneNumber = 0
-                                    }
-                                    else if(roundedLaneNumber > 4) {
-                                        roundedLaneNumber = 4
-                                    }
-                                    
-                                    currentCarLane[0] = roundedLaneNumber
-                                    print(laneNumber)
-                                    
-                                    
-//                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
+//            ZStack {
+//                
+//                //Text("BLAH").position(x: 0, y: getScreenYWithYLane(yLane: 6))
+//                
+//                VStack(spacing: 0) {
+//                    ForEach(carElements, id: \.self) { carArray in
+//                        HStack(spacing: 0) {
+//                            ForEach(carArray, id: \.self) { car in
+//                                if(car.carType == CarElementType.Car) {
 //                                    
-//                                    if(laneDecimal > 0.4) {
-//                                        if(roundedLaneNumber != 4 && laneDecimal < 0.6) {
-//                                            currentCarLane[1] = Int(round(laneNumber)) + 1
-//                                        }
+//                                    ZStack {
+//                                        Image("Road")
+//                                            .resizable()
+//                                            .frame(width: roadWidth, height: roadHeight)
+//                                        Image(car.imageName)
+//                                            .resizable()
+//                                            .frame(width: carWidth, height: carHeight)
 //                                    }
-//                                    else if(laneDecimal < 0.6) {
-//                                        if(roundedLaneNumber != 0 && laneDecimal > 0.4) {
-//                                            currentCarLane[1] = Int(round(laneNumber)) - 1
-//                                        }
+//                                }
+//                                else {
+//                                    Image("Road")
+//                                        .resizable()
+//                                        .frame(width: roadWidth, height: roadHeight)
+//                                }
+//                            }
+//                        }
+//                    }
+//                    Spacer()
+//                }
+//                .background(Color(red: 0.6, green: 0.6, blue: 0.6))
+//                .position(x: UIScreen.main.bounds.size.width / 2,
+//                          y: UIScreen.main.bounds.size.height / 2 + CGFloat(fallingVar)) // + carHeight
+//                .contentShape(Rectangle())
+//                
+//                VStack {
+//                    Spacer()
+//                    HStack {
+//                        Image("BlueCar")
+//                            .resizable()
+//                            .position(x: carPositionX + carWidth / 2)
+//                            .frame(width: carWidth / 1.15, height: carHeight / 1.15)
+//                    }.padding(25)
+//                }
+//                .onReceive(timer) { time in
+//                    if(gameRunning) {
+//                        fallingVar += ((carSpeed * carSpeedMultiplier) / 2)
+//                        distanceTraveled += (0.1 * ((carSpeed * carSpeedMultiplier) / 3))
+//                        
+//                        if(distanceTraveled >= 1000) {
+//                            carSpeedMultiplier = 1.5
+//                        }
+//                        else if(distanceTraveled >= 800) {
+//                            carSpeedMultiplier = 1.4
+//                        }
+//                        else if(distanceTraveled >= 650) {
+//                            carSpeedMultiplier = 1.3
+//                        }
+//                        else if(distanceTraveled >= 500) {
+//                            carSpeedMultiplier = 1.2
+//                        }
+//                        else if(distanceTraveled >= 350) {
+//                            carSpeedMultiplier = 1.15
+//                        }
+//                        else if(distanceTraveled >= 200) {
+//                            carSpeedMultiplier = 1.1
+//                        }
+//                        else if(distanceTraveled >= 100) {
+//                            carSpeedMultiplier = 1.05
+//                        }
+//                    }
+//                    
+//                    print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10))
+//                    
+//                    //detect car collisions
+//                    for i in 0...4 {
+//                        //if the player car is colliding with a car
+//                        if((carElements[6][i].carType == CarElementType.Car ||
+//                            carElements[7][i].carType == CarElementType.Car) &&
+//                           (currentCarLane[0] == i || currentCarLane[1] == i)) {
+//                            
+//                            //let _ = print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + 135))
+//                            
+//                            
+//                            if(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10) <= roadHeight) {
+//                                endGame()
+//                                currentPopupOpen = PopupType.GameOver
+//                            }
+//                        }
+//                    }
+//                    
+//                    //loop the car back to top of array when it reaches the bottom
+//                    if(fallingVar >= roadHeight + 0) {
+//                        fallingVar = 0
+//                        
+//                        carElements.removeLast()
+//                        carElements.insert(carGenerator.generateNextRow(), at: 0)
+//                    }
+//                }
+//                
+//                
+//                
+//                //the input area where you drag your finger to move
+//                VStack {
+//                    Spacer()
+//                    HStack {}
+//                        .frame(width: UIScreen.main.bounds.size.width,
+//                               height: UIScreen.main.bounds.size.height / 3)
+//                        .background(showMoveArea ? Color.black.opacity(0.05) : Color.black.opacity(0))
+//                        .contentShape(Rectangle())
+//                        .gesture(DragGesture()
+//                            .onChanged { value in
+//                                if(gameRunning) {
+//                                    let _ = carPositionX = (value.location.x - (UIScreen.main.bounds.size.width / 2))
+//                                    
+//                                    let laneNumber = (carPositionX / roadWidth) + 2
+//                                    var roundedLaneNumber = Int(round(laneNumber))
+//                                    
+//                                    //make sure the current lane isn't out of bounds
+//                                    if(roundedLaneNumber < 0) {
+//                                        roundedLaneNumber = 0
 //                                    }
-//                                    else {
-//                                        currentCarLane[1] = -1
+//                                    else if(roundedLaneNumber > 4) {
+//                                        roundedLaneNumber = 4
 //                                    }
-                                }
-                            }
-                        )
-                    
-                }
-                
-                VStack {
-                    HStack(alignment: .top) {
-                        Button() {
-                            currentPopupOpen = PopupType.GamePaused
-                            endGame()
-                        } label: {
-                            Image(systemName: "pause.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 60, height: 60)
-                                .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
-                        }.padding(5)
-                        Spacer()
-                        Text(String(Int(distanceTraveled)) + "ft")
-                            .font(.custom("ChalkboardSE-Bold", size: 30))
-                    }
-                    Spacer()
-                }
-                
-                if(currentPopupOpen == PopupType.GameOver) {
-                    VStack {
-                        Text("Game Over")
-                            .font(.custom("ChalkboardSE-Bold", size: 35))
-                        
-                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
-                            .font(.custom("ChalkboardSE-Bold", size: 25))
-                        
-                        HStack {
-                            Button() {
-                                currentWindowOpen = WindowType.Home
-                            } label: {
-                                Image(systemName: "house.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 15)
-                            
-                            Button() {
-                                startGame()
-                            } label: {
-                                Image(systemName: "gobackward")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 15)
-                        }
-                        
-                    }
-                    .padding([.horizontal, .bottom], 50)
-                    .background(Color.yellow)
-                }
-                else if(currentPopupOpen == PopupType.GamePaused) {
-                    VStack {
-                        Text("Game Paused")
-                            .font(.custom("ChalkboardSE-Bold", size: 35))
-                        
-                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
-                            .font(.custom("ChalkboardSE-Bold", size: 25))
-                        
-                        HStack {
-                            Button() {
-                                currentWindowOpen = WindowType.Home
-                            } label: {
-                                Image(systemName: "house.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 15)
-                            
-                            Button() {
-                                currentPopupOpen = PopupType.None
-                                gameRunning = true
-                            } label: {
-                                Image(systemName: "play.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 66, height: 66)
-                                    .foregroundColor(Color.gray)
-                            }.padding(.horizontal, 15)
-                        }
-                        
-                    }
-                    .padding([.horizontal, .bottom], 50)
-                    .background(Color.orange)
-                }
-                
-            }
-            .background(Color.blue)
+//                                    
+//                                    currentCarLane[0] = roundedLaneNumber
+//                                    print(laneNumber)
+//                                    
+//                                    
+////                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
+////                                    
+////                                    if(laneDecimal > 0.4) {
+////                                        if(roundedLaneNumber != 4 && laneDecimal < 0.6) {
+////                                            currentCarLane[1] = Int(round(laneNumber)) + 1
+////                                        }
+////                                    }
+////                                    else if(laneDecimal < 0.6) {
+////                                        if(roundedLaneNumber != 0 && laneDecimal > 0.4) {
+////                                            currentCarLane[1] = Int(round(laneNumber)) - 1
+////                                        }
+////                                    }
+////                                    else {
+////                                        currentCarLane[1] = -1
+////                                    }
+//                                }
+//                            }
+//                        )
+//                    
+//                }
+//                
+//                VStack {
+//                    HStack(alignment: .top) {
+//                        Button() {
+//                            currentPopupOpen = PopupType.GamePaused
+//                            endGame()
+//                        } label: {
+//                            Image(systemName: "pause.fill")
+//                                .resizable()
+//                                .scaledToFit()
+//                                .frame(width: 60, height: 60)
+//                                .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
+//                        }.padding(5)
+//                        Spacer()
+//                        Text(String(Int(distanceTraveled)) + "ft")
+//                            .font(.custom("ChalkboardSE-Bold", size: 30))
+//                    }
+//                    Spacer()
+//                }
+//                
+//                if(currentPopupOpen == PopupType.GameOver) {
+//                    VStack {
+//                        Text("Game Over")
+//                            .font(.custom("ChalkboardSE-Bold", size: 35))
+//                        
+//                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
+//                            .font(.custom("ChalkboardSE-Bold", size: 25))
+//                        
+//                        HStack {
+//                            Button() {
+//                                currentWindowOpen = WindowType.Home
+//                            } label: {
+//                                Image(systemName: "house.fill")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(width: 66, height: 66)
+//                                    .foregroundColor(Color.gray)
+//                            }.padding(.horizontal, 15)
+//                            
+//                            Button() {
+//                                startGame()
+//                            } label: {
+//                                Image(systemName: "gobackward")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(width: 66, height: 66)
+//                                    .foregroundColor(Color.gray)
+//                            }.padding(.horizontal, 15)
+//                        }
+//                        
+//                    }
+//                    .padding([.horizontal, .bottom], 50)
+//                    .background(Color.yellow)
+//                }
+//                else if(currentPopupOpen == PopupType.GamePaused) {
+//                    VStack {
+//                        Text("Game Paused")
+//                            .font(.custom("ChalkboardSE-Bold", size: 35))
+//                        
+//                        Text("You traveled " + String(Int(distanceTraveled)) + " feet")
+//                            .font(.custom("ChalkboardSE-Bold", size: 25))
+//                        
+//                        HStack {
+//                            Button() {
+//                                currentWindowOpen = WindowType.Home
+//                            } label: {
+//                                Image(systemName: "house.fill")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(width: 66, height: 66)
+//                                    .foregroundColor(Color.gray)
+//                            }.padding(.horizontal, 15)
+//                            
+//                            Button() {
+//                                currentPopupOpen = PopupType.None
+//                                gameRunning = true
+//                            } label: {
+//                                Image(systemName: "play.fill")
+//                                    .resizable()
+//                                    .scaledToFit()
+//                                    .frame(width: 66, height: 66)
+//                                    .foregroundColor(Color.gray)
+//                            }.padding(.horizontal, 15)
+//                        }
+//                        
+//                    }
+//                    .padding([.horizontal, .bottom], 50)
+//                    .background(Color.orange)
+//                }
+//                
+//            }
+//            .background(Color.blue)
         }
     }
 }
