@@ -37,6 +37,12 @@ struct MainGameView: View {
     
     @State private var currentPopupOpen: PopupType = PopupType.None
     
+    @Binding var currentWindowOpen: WindowType
+    @Binding var quests: [Quest]
+    
+    @Binding var coinAmount: Int
+    @Binding var bestDistance: Int
+    
     func getScreenYWithYLane(yLane: Int) -> CGFloat {
         
         //-(12 * carHeight - UIScreen.main.bounds.size.height) / 2.0 + (6 * carHeight) + (carHeight / 2) + fallingVar
@@ -53,14 +59,14 @@ struct MainGameView: View {
         carSpeedMultiplier = 1
         gameRunning = false
         
-        if(Int(distanceTraveled) > GlobalData.bestDistance) {
-            GlobalData.bestDistance = Int(distanceTraveled)
+        if(Int(distanceTraveled) > bestDistance) {
+            bestDistance = Int(distanceTraveled)
         }
         
-        GlobalData.quests = QuestManager.updateQuests(type: QuestType.DriveDistance, increase: true, value: Int(distanceTraveled), quests: GlobalData.quests)
-        GlobalData.quests = QuestManager.updateQuests(type: QuestType.DriveToDistance, increase: false, value: Int(distanceTraveled), quests: GlobalData.quests)
+        quests = QuestManager.updateQuests(type: QuestType.DriveDistance, increase: true, value: Int(distanceTraveled), quests: quests)
+        quests = QuestManager.updateQuests(type: QuestType.DriveToDistance, increase: false, value: Int(distanceTraveled), quests: quests)
         
-        GlobalData.coinAmount += Int(distanceTraveled / 10)
+        coinAmount += Int(distanceTraveled / 10)
         //saveData()
     }
     
@@ -80,7 +86,7 @@ struct MainGameView: View {
     
     //changes the window while also setting up all the game elements
     func startGame() {
-        GlobalData.currentWindowOpen = WindowType.MainGame
+        //currentWindowOpen = WindowType.MainGame
         
         carPositionX = 0
         currentCarLane = [2, -1]
@@ -166,7 +172,7 @@ struct MainGameView: View {
                     }
                 }
                 
-                print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10))
+                //print(abs(getScreenYWithYLane(yLane: 6) - UIScreen.main.bounds.size.height + roadHeight - 10))
                 
                 //detect car collisions
                 for i in 0...4 {
@@ -221,7 +227,7 @@ struct MainGameView: View {
                                 }
                                 
                                 currentCarLane[0] = roundedLaneNumber
-                                print(laneNumber)
+                                //print(laneNumber)
                                 
                                 
 //                                    let laneDecimal = laneNumber.truncatingRemainder(dividingBy: 1)
@@ -274,7 +280,7 @@ struct MainGameView: View {
                     
                     HStack {
                         Button() {
-                            GlobalData.currentWindowOpen = WindowType.Home
+                            currentWindowOpen = WindowType.Home
                         } label: {
                             Image(systemName: "house.fill")
                                 .resizable()
@@ -284,7 +290,7 @@ struct MainGameView: View {
                         }.padding(.horizontal, 15)
                         
                         Button() {
-                            //startGame()
+                            startGame()
                         } label: {
                             Image(systemName: "gobackward")
                                 .resizable()
@@ -308,7 +314,7 @@ struct MainGameView: View {
                     
                     HStack {
                         Button() {
-                            GlobalData.currentWindowOpen = WindowType.Home
+                            currentWindowOpen = WindowType.Home
                         } label: {
                             Image(systemName: "house.fill")
                                 .resizable()
@@ -336,9 +342,12 @@ struct MainGameView: View {
             
         }
         .background(Color.blue)
+        .onAppear {
+            startGame()
+        }
     }
 }
 
 #Preview {
-    MainGameView()
+    MainGameView(currentWindowOpen: .constant(WindowType.Home), quests: .constant([]), coinAmount: .constant(0), bestDistance: .constant(0))
 }
