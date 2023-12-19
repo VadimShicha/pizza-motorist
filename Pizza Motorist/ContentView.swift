@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct GarageCar {
+    
     var carTitle: String = "Blue Car"
     var imageName: String = "BlueCar"
     var cost: Int = 1000
@@ -483,56 +484,61 @@ struct ContentView: View {
                             .font(.custom("ChalkboardSE-Bold", size: 35))
                         
                         ScrollView {
-                            VStack {
-                                ForEach(0..<1, id: \.self) { i in
-                                    HStack {
-                                        ForEach(0...1, id: \.self) { j in
-                                            VStack {
-//                                                if((i * 2) + j < ownedCars.count) {
-//                                                    HStack {
-//                                                        Spacer()
-//                                                        Text(ownedCars[i].carTitle)
-//                                                            .font(.custom("ChalkboardSE-Bold", size: 23))
-//                                                        Spacer()
-//                                                    }
-//                                                    
-//                                                    Image(ownedCars[i].imageName)
-//                                                        .resizable()
-//                                                        .scaledToFit()
-//                                                        .frame(width: 66, height: 66)
-//                                                    
-//                                                    HStack {
-//                                                        Spacer()
-//                                                        Button() {
-//                                                            
-//                                                        } label: {
-//                                                            Text("Equip")
-//                                                                .font(.custom("ChalkboardSE-Bold", size: 17))
-//                                                                .foregroundColor(Color.black)
-//                                                                .padding(1)
-//                                                        }
-//                                                        .padding(3)
-//                                                        .background(Color.brown.opacity(0.7))
-//                                                        .cornerRadius(5)
-//                                                        Spacer()
-//                                                    }
-//                                                }
-//                                                else {
-//                                                    HStack {
-//                                                        Spacer()
-//                                                    }
-//                                                }
-                                                
-                                            }
-                                            .padding(4)
-                                            .background(Color.cyan.opacity(0.4))
-                                            .cornerRadius(5)
-                                            .padding(4)
-                                        }
-                                    }
-                                    
-                                }
-                            }
+//                            VStack {
+//                                let rowAmount = ownedCars.count
+//                                print(rowAmount)
+//                                
+//                                ForEach(0..<rowAmount, id: \.id) { i in
+//                                    HStack {
+//                                        //ForEach(0...1, id: \.self) { j in
+////                                            let index = (i * 2) + j
+////                                            
+////                                            VStack {
+////                                                if(index < ownedCars.count) {
+//////                                                    HStack {
+//////                                                        Spacer()
+//////                                                        Text(ownedCars[index].carTitle)
+//////                                                            .font(.custom("ChalkboardSE-Bold", size: 23))
+//////                                                        Spacer()
+//////                                                    }
+//////                                                    
+//////                                                    Image(ownedCars[index].imageName)
+//////                                                        .resizable()
+//////                                                        .scaledToFit()
+//////                                                        .frame(width: 66, height: 66)
+//////                                                    
+//////                                                    HStack {
+//////                                                        Spacer()
+//////                                                        Button() {
+//////                                                            
+//////                                                        } label: {
+//////                                                            Text("Equip")
+//////                                                                .font(.custom("ChalkboardSE-Bold", size: 17))
+//////                                                                .foregroundColor(Color.black)
+//////                                                                .padding(1)
+//////                                                        }
+//////                                                        .padding(3)
+//////                                                        .background(Color.brown.opacity(0.7))
+//////                                                        .cornerRadius(5)
+//////                                                        Spacer()
+//////                                                    }
+////                                                }
+////                                                else {
+////                                                    HStack {
+////                                                        Spacer()
+////                                                    }
+////                                                }
+////                                                
+////                                            }
+////                                            .padding(4)
+////                                            .background(Color.cyan.opacity(0.4))
+////                                            .cornerRadius(5)
+////                                            .padding(4)
+//                                        //}
+//                                    }
+//                                    
+//                                }
+//                            }
                         }
                         .frame(height: 400)
                         
@@ -559,6 +565,17 @@ struct ContentView: View {
                                     .frame(width: 66, height: 66)
                                     .padding(5)
                                     .background(currentPopupOpen == PopupType.Quest ? homeTabColorSelected : homeTabColor)
+                            }
+                            Button() {
+                                togglePopup(name: PopupType.Shop)
+                            } label: {
+                                Image(systemName: "flag.2.crossed.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 66, height: 66)
+                                    .foregroundColor(Color.red)
+                                    .padding(5)
+                                    .background(currentPopupOpen == PopupType.Shop ? homeTabColorSelected : homeTabColor)
                             }
                             Button() {
                                 togglePopup(name: PopupType.Shop)
